@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account profile details for NEET 2027 aspirants",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "description": "User email address" },
+        "displayName": { "type": "string", "description": "Full name or display name" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "targetYear": { "type": "number", "description": "Target NEET year e.g. 2027" },
+        "dropperStatus": { "type": "string", "description": "e.g. 1st Drop, 2nd Drop, Fresher" },
+        "streakDays": { "type": "number", "description": "Current consecutive active days" },
+        "totalStudyMinutes": { "type": "number", "description": "Total study time in minutes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation ISO timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update ISO timestamp" }
+      },
+      "required": ["uid", "email", "displayName", "targetYear"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "NEET curriculum subject (Physics, Chemistry, Biology)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique subject identifier" },
+        "name": { "type": "string", "description": "Subject name" },
+        "code": { "type": "string", "description": "e.g. PHY, CHEM, BIO" },
+        "icon": { "type": "string", "description": "Icon identifier" },
+        "color": { "type": "string", "description": "Accent color string" },
+        "totalUnits": { "type": "number", "description": "Count of units" },
+        "totalChapters": { "type": "number", "description": "Count of chapters" },
+        "weightagePercent": { "type": "number", "description": "NEET weightage percentage" }
+      },
+      "required": ["id", "name", "code"]
+    },
+    "Topic": {
+      "title": "Topic",
+      "description": "Granular chapter topic with video lectures, notes, PYQs, and MCQs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Topic ID" },
+        "chapterId": { "type": "string", "description": "Parent chapter ID" },
+        "subjectId": { "type": "string", "description": "Parent subject ID" },
+        "title": { "type": "string", "description": "Topic title" },
+        "description": { "type": "string", "description": "Short topic overview" },
+        "youtubeVideoId": { "type": "string", "description": "Official YouTube video embed ID" },
+        "durationMinutes": { "type": "number", "description": "Video length in minutes" },
+        "importance": { "type": "string", "description": "High, Medium, Low NEET priority" },
+        "pyqCount": { "type": "number", "description": "Number of PYQs" },
+        "mcqCount": { "type": "number", "description": "Number of practice MCQs" }
+      },
+      "required": ["id", "chapterId", "subjectId", "title", "youtubeVideoId"]
+    },
+    "UserProgress": {
+      "title": "User Topic Progress",
+      "description": "Records user completion status and confidence level for a topic",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Progress document ID" },
+        "userId": { "type": "string", "description": "User UID" },
+        "topicId": { "type": "string", "description": "Topic ID" },
+        "completed": { "type": "boolean", "description": "Whether lecture watched" },
+        "notesRead": { "type": "boolean", "description": "Whether notes reviewed" },
+        "mcqsSolved": { "type": "number", "description": "Number of MCQs solved" },
+        "confidence": { "type": "string", "description": "Strong, Moderate, Weak" },
+        "lastStudiedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["id", "userId", "topicId", "completed"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "Saved topics, PYQs, or notes for quick reference",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Bookmark ID" },
+        "userId": { "type": "string", "description": "User UID" },
+        "topicId": { "type": "string", "description": "Topic ID" },
+        "itemType": { "type": "string", "description": "topic, pyq, mcq, note" },
+        "title": { "type": "string", "description": "Bookmark title" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "userId", "topicId", "itemType"]
+    },
+    "StudySession": {
+      "title": "Study Session Log",
+      "description": "Tracked focus study timer session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Session ID" },
+        "userId": { "type": "string", "description": "User UID" },
+        "subjectId": { "type": "string", "description": "Subject ID" },
+        "topicId": { "type": "string", "description": "Topic ID" },
+        "durationMinutes": { "type": "number", "description": "Duration in minutes" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Completion time" },
+        "mode": { "type": "string", "description": "Pomodoro, Stopwatch, Video Focus" }
+      },
+      "required": ["id", "userId", "durationMinutes", "timestamp"]
+    },
+    "RevisionItem": {
+      "title": "Revision Queue Item",
+      "description": "Spaced repetition item for active recall",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Revision item ID" },
+        "userId": { "type": "string", "description": "User UID" },
+        "topicId": { "type": "string", "description": "Topic ID" },
+        "topicTitle": { "type": "string", "description": "Topic title" },
+        "subjectId": { "type": "string", "description": "Subject ID" },
+        "nextRevisionDate": { "type": "string", "format": "date-time", "description": "Due date" },
+        "level": { "type": "number", "description": "Spaced repetition level (1-5)" },
+        "status": { "type": "string", "description": "due, completed, pending" }
+      },
+      "required": ["id", "userId", "topicId", "nextRevisionDate"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile collection"
+    },
+    "/topics/{topicId}": {
+      "schema": { "$ref": "#/entities/Topic" },
+      "description": "Global curriculum topic collection"
+    },
+    "/userProgress/{progressId}": {
+      "schema": { "$ref": "#/entities/UserProgress" },
+      "description": "User topic progress collection"
+    },
+    "/bookmarks/{bookmarkId}": {
+      "schema": { "$ref": "#/entities/Bookmark" },
+      "description": "User bookmarks collection"
+    },
+    "/studySessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/StudySession" },
+      "description": "User study time session logs"
+    },
+    "/revisionQueue/{revisionId}": {
+      "schema": { "$ref": "#/entities/RevisionItem" },
+      "description": "User spaced repetition revision items"
+    }
+  }
+}
