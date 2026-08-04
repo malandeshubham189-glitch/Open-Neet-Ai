@@ -11,7 +11,15 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "build:lectures": "tsx src/scripts/buildLectureDatabase.ts",
-    "verify:lectures": "tsx src/scripts/verifyLectureDatabase.ts"
+    "verify:lectures": "tsx src/scripts/verifyLectureDatabase.ts",
+    "sync:botany11": "tsx src/scripts/syncBotany11.ts",
+    "verify:botany11": "tsx src/scripts/verifyBotany11.ts",
+    "verify:liveclass": "tsx src/scripts/verifyLiveClass.ts",
+    "verify:unacademy": "tsx src/scripts/verifyUnacademyPipeline.ts",
+    "verify:liveresolver": "tsx src/scripts/verifyLiveResolver.ts",
+    "verify:youtubesystem": "tsx src/scripts/verifyYouTubeSystem.ts",
+    "verify:engine": "tsx src/scripts/verifyEngineAndYouTube.ts",
+    "verify:aitutor": "tsx src/scripts/verifyAITutorMode.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -22,6 +30,7 @@
     "firebase": "^12.16.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "pdfjs-dist": "^6.2.108",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-markdown": "^10.1.0",

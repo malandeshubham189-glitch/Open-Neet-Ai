@@ -1,6 +1,8 @@
 import { LectureMapping, LectureType, TeacherProfile, TargetScoreConfig, TargetScoreMode } from '../types';
 import { GENERATED_LECTURE_DATABASE, LECTURE_DATABASE, LectureRecord, ImportedLectureRecord } from '../data/generatedLectureDatabase';
 import { CURRICULUM_DATA } from '../data/curriculumData';
+import { Botany11LectureService } from './botany11LectureService';
+import { lectureResolver, ResolvedLecture } from './lectureResolver';
 
 const LECTURE_STORAGE_KEY = 'neetdrop_curated_lectures_v1';
 
@@ -230,6 +232,34 @@ export class Curated2025PWLectureProvider implements ILectureRecommendationProvi
       console.warn('Could not read lecture overrides:', e);
     }
 
+    // 2. Check Class 11 Botany dedicated pipeline
+    const botany11Lec = Botany11LectureService.getLectureForTopic(topicId);
+    if (botany11Lec) {
+      return {
+        lecture: {
+          id: `bot11-${botany11Lec.youtubeId}`,
+          type: 'primary',
+          title: botany11Lec.title,
+          teacher: botany11Lec.teacher,
+          channel: botany11Lec.channel,
+          youtubeVideoId: botany11Lec.youtubeId,
+          durationMinutes: parseInt(botany11Lec.duration) || 300,
+          language: 'Hinglish',
+          recordedYear: '2025',
+          updatedStatus: 'Latest NMC Syllabus',
+          sequenceOrder: botany11Lec.playlistIndex,
+          ncertCoveragePercent: 100,
+          topicCoveragePercent: 100,
+          difficulty: 'Medium',
+          healthStatus: 'Verified',
+          isNmcCompatible: true,
+          recommendationReason: `Official Class 11 Botany lecture from ${botany11Lec.playlistName} by ${botany11Lec.teacher}.`
+        },
+        isFallback: false,
+        reason: `Official Class 11 Botany playlist lecture (${botany11Lec.playlistName}).`
+      };
+    }
+
     // 2. Check Curated 2025 Competition Wallah database
     if (VERIFIED_2025_CURATED_LECTURES[topicId]) {
       const curated = VERIFIED_2025_CURATED_LECTURES[topicId];
@@ -296,6 +326,14 @@ export class LectureService {
   static getLecturesForTopic(topicId: string, baseLectures: LectureMapping[] = []): LectureMapping[] {
     const rec = this.getRecommendedLecture(topicId, baseLectures);
     return [rec.lecture]; // Enforce One Topic = One Lecture
+  }
+
+  /**
+   * Hybrid Official Lecture Resolver
+   * Priority: 1. Verified YouTube -> 2. Official PW Free -> 3. No Lecture
+   */
+  static resolveLecture(topicId: string, baseLectures: LectureMapping[] = []): ResolvedLecture {
+    return lectureResolver(topicId, baseLectures);
   }
 
   /**

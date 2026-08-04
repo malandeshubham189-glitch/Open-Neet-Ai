@@ -397,4 +397,61 @@ export class AIStudyEngine {
       backlogTopicsCount: remainingTopicsCount
     };
   }
+
+  /**
+   * AI Decision Engine helper to answer core student queries
+   */
+  static getAIDecisionAdvice(query: string): {
+    answer: string;
+    actionType: 'LECTURE' | 'REVISION' | 'LIVE' | 'NCERT' | 'MCQ';
+    recommendedTopicOrChapter: string;
+    recommendedVideoId?: string;
+  } {
+    const q = query.toLowerCase();
+
+    if (q.includes('live') || q.includes('live class')) {
+      return {
+        answer: '🔴 Join MA Sir\'s Live Physics Masterclass on Rotational Motion & Moment of Inertia! Interactive doubts and high-yield numerical problem solving live right now.',
+        actionType: 'LIVE',
+        recommendedTopicOrChapter: 'Rotational Motion & Moment of Inertia',
+        recommendedVideoId: 'fA-XN6q3f6A',
+      };
+    }
+
+    if (q.includes('weak') || q.includes('weakest')) {
+      return {
+        answer: 'Your current weakest topic is Rotational Motion & Moment of Inertia (Physics) and Gymnosperms Life Cycles (Botany). Tackling these will yield an immediate +16 to +24 mark boost in your next test.',
+        actionType: 'LECTURE',
+        recommendedTopicOrChapter: 'Rotational Motion & Moment of Inertia',
+        recommendedVideoId: 'fA-XN6q3f6A',
+      };
+    }
+
+    if (q.includes('revise') || q.includes('revision')) {
+      return {
+        answer: 'You have 2 spaced recall items due today: Moment of Inertia Theorems and Gymnosperms NCERT Lines. Revisit these to maintain 100% memory retention.',
+        actionType: 'REVISION',
+        recommendedTopicOrChapter: 'Moment of Inertia & Plant Kingdom NCERT',
+        recommendedVideoId: '_W1b6rO7_F4',
+      };
+    }
+
+    if (q.includes('marks') || q.includes('maximum')) {
+      return {
+        answer: 'Rotational Motion (Physics), Cell Biology (Botany), and Human Reproduction (Zoology) carry the highest question weightage (4-5 questions each / up to 60 marks combined).',
+        actionType: 'LECTURE',
+        recommendedTopicOrChapter: 'Rotational Motion / Cell Biology',
+        recommendedVideoId: 'x5G_m9L3qP2',
+      };
+    }
+
+    // Default: What to study/watch next
+    return {
+      answer: 'Your next best study target is "The Living World" Class 11 Botany Masterclass by Seep Pahuja, followed by 30 topic MCQs.',
+      actionType: 'LECTURE',
+      recommendedTopicOrChapter: 'The Living World Class 11 Botany',
+      recommendedVideoId: '_W1b6rO7_F4',
+    };
+  }
 }
+

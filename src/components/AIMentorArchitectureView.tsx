@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatAIMentorPrompt, MentorPromptRequest } from '../services/gemini';
 import { useApp } from '../context/AppContext';
 import ReactMarkdown from 'react-markdown';
+import { TeacherFormattedMessage } from './TeacherFormattedMessage';
 import {
   BrainCircuit,
   Bot,
@@ -56,7 +57,7 @@ export const AIMentorArchitectureView: React.FC = () => {
       const data = await res.json();
       if (data.answer) {
         setAiAnswer(data.answer);
-        setModelName(data.modelUsed || 'gemini-3.6-flash');
+        setModelName(data.modelUsed || 'gemini-2.5-flash');
       }
     } catch (err) {
       setAiAnswer('### ⚠️ Connection Error\nCould not connect to AI Brain backend. Please check server status.');
@@ -97,7 +98,7 @@ export const AIMentorArchitectureView: React.FC = () => {
 
         <div className="flex items-center gap-2 text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl font-bold shrink-0">
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
-          <span>Server-Side Gemini 3.6 API Ready</span>
+          <span>Server-Side Gemini 2.5 API Ready</span>
         </div>
       </div>
 
@@ -283,8 +284,8 @@ export const AIMentorArchitectureView: React.FC = () => {
                   <p className="text-xs font-bold text-[#2563EB]">Analyzing NCERT text lines and physics formulas...</p>
                 </div>
               ) : aiAnswer ? (
-                <div className="markdown-body text-xs sm:text-sm text-[#111827] space-y-3 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                  <ReactMarkdown>{aiAnswer}</ReactMarkdown>
+                <div className="text-xs sm:text-sm text-[#111827] leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <TeacherFormattedMessage content={aiAnswer} />
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">

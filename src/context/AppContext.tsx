@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AIMentorChatModal } from '../components/AIMentorChatModal';
 import {
   UserTopicProgress,
   BookmarkItem,
@@ -30,8 +31,17 @@ export type AppView =
   | 'revision'
   | 'question-bank'
   | 'test-center'
+  | 'practice-engine'
   | 'ai-mentor'
-  | 'ai-planner';
+  | 'ai-planner'
+  | 'ai-chatbot'
+  | 'kapil-biology-channel'
+  | 'telegram-notes'
+  | 'notes'
+  | 'mcq'
+  | 'ncert'
+  | 'pyq'
+  | 'test';
 
 export interface StudentMetrics {
   totalWatchTimeMinutes: number;
@@ -110,6 +120,12 @@ interface AppContextType {
   getTodayPlan: () => TodayPlanItem[];
   getEngineAnalytics: () => EngineAnalytics;
   getWeakTopicRecoveryPlan: () => WeakTopicItem[];
+
+  // Global AI Mentor Chat Modal
+  isAIMentorModalOpen: boolean;
+  initialMentorQuery: string;
+  openAIMentorModal: (initialQuery?: string) => void;
+  closeAIMentorModal: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -794,6 +810,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Global AI Mentor Chat Modal State
+  const [isAIMentorModalOpen, setIsAIMentorModalOpen] = useState(false);
+  const [initialMentorQuery, setInitialMentorQuery] = useState('');
+
+  const openAIMentorModal = (query?: string) => {
+    if (query) {
+      setInitialMentorQuery(query);
+    } else {
+      setInitialMentorQuery('');
+    }
+    setIsAIMentorModalOpen(true);
+  };
+
+  const closeAIMentorModal = () => {
+    setIsAIMentorModalOpen(false);
+    setInitialMentorQuery('');
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -835,10 +869,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getNextBestAction,
         getTodayPlan,
         getEngineAnalytics,
-        getWeakTopicRecoveryPlan
+        getWeakTopicRecoveryPlan,
+        isAIMentorModalOpen,
+        initialMentorQuery,
+        openAIMentorModal,
+        closeAIMentorModal
       }}
     >
       {children}
+      <AIMentorChatModal
+        isOpen={isAIMentorModalOpen}
+        onClose={closeAIMentorModal}
+        initialQuery={initialMentorQuery}
+      />
     </AppContext.Provider>
   );
 };
