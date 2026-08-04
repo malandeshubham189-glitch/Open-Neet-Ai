@@ -4,6 +4,7 @@ import { getAllTopics } from '../data/curriculumData';
 import { getNCERTChapterPdfInfo } from '../lib/ncertPdfMapping';
 import { InAppPdfViewer } from './InAppPdfViewer';
 import { NCERTSentenceReader } from './NCERTSentenceReader';
+import { HumanHeartDiagram } from './HumanHeartDiagram';
 import { findPyqsForNcertLine, PyqMatchResult } from '../lib/ncertPyqMatcher';
 import {
   getChapterHighlights,
@@ -76,8 +77,8 @@ function getNCERTTextbookUrl(subjectId: string, classLevel: string, chapterIndex
 export const NCERTReaderView: React.FC = () => {
   const { topicProgress, updateTopicStepProgress, toggleBookmark, isBookmarked, setCurrentView } = useApp();
 
-  // Active Tab: 'library' (Chapter Library & AI MCQs) | 'reader' (Word-to-Word Highlights)
-  const [activeTab, setActiveTab] = useState<'library' | 'reader'>('library');
+  // Active Tab: 'library' (Chapter Library & AI MCQs) | 'reader' (Word-to-Word Highlights) | 'diagrams' (NCERT Labeled Diagrams)
+  const [activeTab, setActiveTab] = useState<'library' | 'reader' | 'diagrams'>('library');
 
   // Filters
   const [selectedSubject, setSelectedSubject] = useState<SubjectId | 'all'>('all');
@@ -342,6 +343,21 @@ export const NCERTReaderView: React.FC = () => {
             >
               <Highlighter className="h-4 w-4" />
               <span>Word-to-Word NCERT Line Reader</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('diagrams');
+                setActiveQuizChapter(null);
+              }}
+              className={`rounded-xl px-4 py-2 text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === 'diagrams'
+                  ? 'bg-rose-500 text-white shadow-md scale-105 ring-2 ring-rose-300'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              <span>NCERT Labeled Diagrams (Human Heart)</span>
             </button>
           </div>
         </div>
@@ -802,6 +818,13 @@ export const NCERTReaderView: React.FC = () => {
             )}
           </div>
         </div>
+      ) : activeTab === 'diagrams' ? (
+        /* -------------------------------------------------------------------------- */
+        /* MODE 4: NCERT LABELED ANATOMY DIAGRAMS */
+        /* -------------------------------------------------------------------------- */
+        <div className="space-y-6">
+          <HumanHeartDiagram />
+        </div>
       ) : (
         /* -------------------------------------------------------------------------- */
         /* MODE 3: WORD-TO-WORD NCERT LINE READER */
@@ -921,21 +944,31 @@ export const NCERTReaderView: React.FC = () => {
                       💡 <strong>NEET Tip:</strong> Direct questions are asked word-to-word from this paragraph in NEET biology and chemistry!
                     </p>
 
-                    <button
-                      onClick={() => {
-                        const matches = findPyqsForNcertLine(activeTopic.chapterName, activeTopic.description, activeTopic.subjectId);
-                        if (matches.length > 0) {
-                          alert(`Found ${matches.length} NEET PYQ(s) matching this line! Opening 10-Yr PYQ Archive...`);
-                          setCurrentView('pyq');
-                        } else {
-                          setCurrentView('pyq');
-                        }
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-[11px] font-extrabold hover:bg-amber-700 transition-all inline-flex items-center gap-1 shadow-xs"
-                    >
-                      <Zap className="h-3.5 w-3.5 text-yellow-300" />
-                      <span>Check Matching NEET PYQs</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveTab('diagrams')}
+                        className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-[11px] font-extrabold hover:bg-rose-700 transition-all inline-flex items-center gap-1 shadow-xs"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
+                        <span>View Human Heart Sectional Diagram</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const matches = findPyqsForNcertLine(activeTopic.chapterName, activeTopic.description, activeTopic.subjectId);
+                          if (matches.length > 0) {
+                            alert(`Found ${matches.length} NEET PYQ(s) matching this line! Opening 10-Yr PYQ Archive...`);
+                            setCurrentView('pyq');
+                          } else {
+                            setCurrentView('pyq');
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-[11px] font-extrabold hover:bg-amber-700 transition-all inline-flex items-center gap-1 shadow-xs"
+                      >
+                        <Zap className="h-3.5 w-3.5 text-yellow-300" />
+                        <span>Check Matching NEET PYQs</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

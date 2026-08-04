@@ -167,6 +167,7 @@ Select a persona or upload an image to start!`,
 };
 
 const SUGGESTED_PROMPTS = [
+  '🫀 NCERT Class 11 Human Heart Sectional View Diagram & Blood Flow',
   '⚡ Explain Moment of Inertia tricks & formulas',
   '🧪 Explain GOC acidic strength order',
   '🧬 How to revise Class 11 Biology in 3 weeks?',
