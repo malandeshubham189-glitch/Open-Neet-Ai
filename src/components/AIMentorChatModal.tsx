@@ -183,7 +183,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState<{ lastQuery: string; message: string } | null>(null);
-  const [modelUsed, setModelUsed] = useState('gemini-3.6-flash');
+  const [modelUsed, setModelUsed] = useState('gemini-3.7-flash');
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   // New Multi-Persona & Multi-Modal States
@@ -205,7 +205,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
     serverReachable: true,
     backendStatus: 'INITIALIZING',
     geminiConnected: true,
-    currentModel: 'gemini-3.6-flash',
+    currentModel: 'gemini-3.7-flash',
     latencyMs: 0,
     httpStatus: null,
     promptTokens: 0,
@@ -231,7 +231,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
             serverReachable: data.serverReachable ?? true,
             backendStatus: data.backendStatus || 'ACTIVE',
             geminiConnected: data.geminiConnected ?? true,
-            currentModel: data.currentModel || 'gemini-3.6-flash'
+            currentModel: data.currentModel || 'gemini-3.7-flash'
           }));
         })
         .catch(() => {
@@ -496,7 +496,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
       serverReachable: httpStatus !== null,
       backendStatus: httpStatus === 200 ? 'HEALTHY' : `HTTP_${httpStatus || 'ERR'}`,
       geminiConnected: responseData?.success ?? false,
-      currentModel: responseData?.modelUsed || 'gemini-3.6-flash',
+      currentModel: responseData?.modelUsed || 'gemini-3.7-flash',
       latencyMs,
       httpStatus,
       promptTokens: responseData?.promptTokens || 0,

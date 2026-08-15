@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { CourseSwitcher } from './nursing/CourseSwitcher';
 import {
   Sparkles,
   Flame,
@@ -11,7 +12,9 @@ import {
   Minimize2,
   Search,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  Stethoscope,
+  Calculator
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -21,7 +24,14 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch }) => {
   const { user, logout } = useAuth();
-  const { setCurrentView, distractionFreeMode, setDistractionFreeMode } = useApp();
+  const {
+    currentView,
+    setCurrentView,
+    distractionFreeMode,
+    setDistractionFreeMode,
+    activeCourse,
+    setActiveCourse
+  } = useApp();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Target December 30 Syllabus Deadline Calculator
@@ -31,45 +41,111 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
   const daysLeft = Math.max(0, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 3600 * 24)));
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#E5E7EB] bg-white/90 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-40 w-full border-b border-[#E5E7EB] bg-white/95 backdrop-blur-md transition-colors font-sans">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-3">
+        {/* Left: Brand Logo + Course Switcher */}
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => setCurrentView('dashboard')}
-            className="group flex items-center gap-3 text-left focus:outline-none"
+            onClick={() =>
+              activeCourse === 'iitm'
+                ? setCurrentView('iitm-dashboard')
+                : activeCourse === 'nursing'
+                ? setCurrentView('nursing-dashboard')
+                : setCurrentView('dashboard')
+            }
+            className="group flex items-center gap-3 text-left focus:outline-none cursor-pointer"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-sm transition-transform group-hover:scale-105">
-              <GraduationCap className="h-5 w-5" />
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105 ${
+                activeCourse === 'iitm'
+                  ? 'bg-indigo-600'
+                  : activeCourse === 'nursing'
+                  ? 'bg-emerald-600'
+                  : 'bg-[#2563EB]'
+              }`}
+            >
+              {activeCourse === 'iitm' ? (
+                <Calculator className="h-5 w-5" />
+              ) : activeCourse === 'nursing' ? (
+                <Stethoscope className="h-5 w-5" />
+              ) : (
+                <GraduationCap className="h-5 w-5" />
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold tracking-tight text-[#111827]">NEETDrop</span>
-                <span className="rounded-md bg-[#2563EB]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#2563EB]">
-                  AI
+                <span className="text-lg font-bold tracking-tight text-[#111827]">
+                  {activeCourse === 'iitm'
+                    ? 'IIT Madras BS'
+                    : activeCourse === 'nursing'
+                    ? 'NursingHub'
+                    : 'NEETDrop'}
+                </span>
+                <span
+                  className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
+                    activeCourse === 'iitm'
+                      ? 'bg-indigo-100 text-indigo-900'
+                      : activeCourse === 'nursing'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-[#2563EB]/10 text-[#2563EB]'
+                  }`}
+                >
+                  {activeCourse === 'iitm' ? 'BS Degree' : activeCourse === 'nursing' ? 'MUHS' : 'AI'}
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-[#6B7280]">NEET 2027 Syllabus Mission</p>
+              <p className="text-[10px] font-medium text-[#6B7280]">
+                {activeCourse === 'iitm'
+                  ? 'Qualifier & Quiz 1 Marathon'
+                  : activeCourse === 'nursing'
+                  ? 'B.Sc Nursing Theory Mastery'
+                  : 'NEET 2027 Syllabus Mission'}
+              </p>
             </div>
           </button>
+
+          {/* Prominent Course Switcher Pill */}
+          <div className="hidden sm:block">
+            <CourseSwitcher
+              activeCourse={activeCourse}
+              onCourseChange={(course) => setActiveCourse(course)}
+            />
+          </div>
         </div>
 
         {/* Center: Search & Quick Navigation */}
-        <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={() => setCurrentView('syllabus')}
-            className="flex items-center gap-2 rounded-xl bg-slate-100/80 border border-[#E5E7EB] px-3.5 py-1.5 text-xs font-semibold text-[#111827] hover:bg-slate-200/80 transition-all"
-          >
-            <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>Curriculum & Syllabus</span>
-          </button>
+        <div className="hidden lg:flex items-center gap-3">
+          {activeCourse === 'iitm' ? (
+            <button
+              onClick={() => setCurrentView('iitm-dashboard')}
+              className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 text-xs font-semibold text-indigo-950 hover:bg-indigo-100 transition-all cursor-pointer"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-indigo-700" />
+              <span>Foundation Subjects (Math 1 & Stats 1)</span>
+            </button>
+          ) : activeCourse === 'nursing' ? (
+            <button
+              onClick={() => setCurrentView('nursing-dashboard')}
+              className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition-all cursor-pointer"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-emerald-700" />
+              <span>MUHS Curriculum Units</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentView('syllabus')}
+              className="flex items-center gap-2 rounded-xl bg-slate-100/80 border border-[#E5E7EB] px-3.5 py-1.5 text-xs font-semibold text-[#111827] hover:bg-slate-200/80 transition-all cursor-pointer"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
+              <span>Curriculum & Syllabus</span>
+            </button>
+          )}
 
           <button
             onClick={() => (onOpenSearch ? onOpenSearch() : setCurrentView('question-bank'))}
             className="flex items-center gap-2 rounded-xl bg-slate-100/80 border border-[#E5E7EB] px-3.5 py-1.5 text-xs font-semibold text-[#111827] hover:bg-slate-200/80 transition-all cursor-pointer"
           >
             <Search className="h-3.5 w-3.5 text-[#7C3AED]" />
-            <span>Instant Search Engine</span>
+            <span>Search Topics</span>
           </button>
         </div>
 

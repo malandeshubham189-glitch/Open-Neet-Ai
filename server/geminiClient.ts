@@ -29,7 +29,7 @@ export function getPrimaryModel(): string {
       return envModel;
     }
   }
-  return "gemini-3.6-flash";
+  return "gemini-3.7-flash";
 }
 
 export function getFallbackModel(): string {
@@ -39,7 +39,7 @@ export function getFallbackModel(): string {
       return envModel;
     }
   }
-  return "gemini-3.5-flash";
+  return "gemini-2.5-flash";
 }
 
 // Token usage metrics store (Server Memory)
@@ -143,17 +143,15 @@ export async function generateContentWithRetry(
   const primaryModel = options.model || getPrimaryModel();
   const fallbackModel = getFallbackModel();
   const maxRetries = options.maxRetries ?? 2;
-  const timeoutMs = options.timeoutMs ?? 25000;
+  const timeoutMs = options.timeoutMs ?? 18000;
 
   const modelsToTry = [
     primaryModel,
     ...(fallbackModel !== primaryModel ? [fallbackModel] : []),
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-flash-latest",
+    "gemini-3.7-flash",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-flash-latest",
+    "gemini-3.1-flash-lite"
   ].filter((v, i, a) => a.indexOf(v) === i);
 
   let lastError: any = null;
@@ -209,20 +207,21 @@ export async function generateContentWithRetry(
         const isQuotaExceeded = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.toLowerCase().includes("quota");
         const isNotFound = errMsg.includes("404") || errMsg.includes("NOT_FOUND") || errMsg.toLowerCase().includes("no longer available") || errMsg.toLowerCase().includes("not found");
         const isTimeout = errMsg.toLowerCase().includes("timed out") || errMsg.toLowerCase().includes("timeout");
+        const isUnavailableOrBusy = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.toLowerCase().includes("high demand") || errMsg.toLowerCase().includes("overloaded");
 
         console.warn(
-          `[Gemini SDK ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : 'Error'}] Attempt ${attempt}/${maxRetries} on model "${currentModel}" failed: ${errMsg}`
+          `[Gemini SDK ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : isUnavailableOrBusy ? 'HighDemand503' : 'Error'}] Attempt ${attempt}/${maxRetries} on model "${currentModel}" failed: ${errMsg}`
         );
 
-        if (isQuotaExceeded || isNotFound || isTimeout) {
-          // Immediately skip remaining retries for this model and switch to next candidate model
-          const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : 'Quota Exceeded';
+        if (isQuotaExceeded || isNotFound || isTimeout || isUnavailableOrBusy) {
+          // Immediately skip remaining retries for this busy/rate-limited model and switch to next candidate model
+          const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : isUnavailableOrBusy ? '503 High Demand' : 'Quota Exceeded';
           console.warn(`[Gemini Fallback] Fast-switching from ${currentModel} to next candidate model (${reason})...`);
           break;
         }
 
         if (attempt < maxRetries) {
-          await delay(attempt * 1000);
+          await delay(attempt * 800);
         }
       }
     }
@@ -245,17 +244,15 @@ export async function* generateStreamWithRetry(
   const primaryModel = options.model || getPrimaryModel();
   const fallbackModel = getFallbackModel();
   const maxRetries = options.maxRetries ?? 2;
-  const timeoutMs = options.timeoutMs ?? 25000;
+  const timeoutMs = options.timeoutMs ?? 18000;
 
   const modelsToTry = [
     primaryModel,
     ...(fallbackModel !== primaryModel ? [fallbackModel] : []),
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-flash-latest",
+    "gemini-3.7-flash",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-flash-latest",
+    "gemini-3.1-flash-lite"
   ].filter((v, i, a) => a.indexOf(v) === i);
 
   let lastError: any = null;
@@ -291,19 +288,20 @@ export async function* generateStreamWithRetry(
         const isQuotaExceeded = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.toLowerCase().includes("quota");
         const isNotFound = errMsg.includes("404") || errMsg.includes("NOT_FOUND") || errMsg.toLowerCase().includes("no longer available") || errMsg.toLowerCase().includes("not found");
         const isTimeout = errMsg.toLowerCase().includes("timed out") || errMsg.toLowerCase().includes("timeout");
+        const isUnavailableOrBusy = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.toLowerCase().includes("high demand") || errMsg.toLowerCase().includes("overloaded");
 
         console.warn(
-          `[Gemini Stream ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : 'Error'}] Attempt ${attempt}/${maxRetries} failed on model "${currentModel}": ${errMsg}`
+          `[Gemini Stream ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : isUnavailableOrBusy ? 'HighDemand503' : 'Error'}] Attempt ${attempt}/${maxRetries} failed on model "${currentModel}": ${errMsg}`
         );
 
-        if (isQuotaExceeded || isNotFound || isTimeout) {
-          const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : 'Quota Exceeded';
+        if (isQuotaExceeded || isNotFound || isTimeout || isUnavailableOrBusy) {
+          const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : isUnavailableOrBusy ? '503 High Demand' : 'Quota Exceeded';
           console.warn(`[Gemini Stream Fallback] Fast-switching from ${currentModel} to next candidate model (${reason})...`);
           break;
         }
 
         if (attempt < maxRetries) {
-          await delay(attempt * 1000);
+          await delay(attempt * 800);
         }
       }
     }

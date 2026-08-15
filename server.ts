@@ -723,7 +723,7 @@ Student Doubt/Question: ${userQuery}`;
         success: true,
         answer: sanitizedText,
         reply: sanitizedText, // Backwards compatibility
-        modelUsed: result.modelUsed || 'gemini-3.6-flash',
+        modelUsed: result.modelUsed || 'gemini-3.7-flash',
         latencyMs,
         promptTokens,
         outputTokens,
@@ -1037,7 +1037,7 @@ Return ONLY valid JSON array with no extra markdown backticks if possible, or ma
       return res.json({
         success: true,
         reply: sanitized,
-        modelUsed: modelUsed || 'gemini-3.6-flash',
+        modelUsed: modelUsed || 'gemini-3.7-flash',
         timestamp: new Date().toISOString()
       });
     } catch (err: any) {
@@ -1167,6 +1167,199 @@ Each object must strictly match this schema:
       statusMessage: "No official channel is currently live streaming.",
       lastChecked: new Date().toISOString()
     });
+  });
+
+  // =========================================================================
+  // B.SC NURSING LEARNING HUB BACKEND APIs
+  // =========================================================================
+
+  const NURSING_ACADEMIC_SYSTEM_PROMPT = `You are the Senior Clinical Nursing Professor, Academic Mentor & Exam Specialist for B.Sc Nursing students affiliated with Maharashtra University of Health Sciences (MUHS) and the Indian Nursing Council (INC).
+
+Your role is to guide nursing students through theory preparation with clarity, evidence-based nursing care, strict adherence to NANDA-I nursing diagnoses, and high-scoring university examination formatting (15-mark LAQs, 5-mark SAQs, Short Notes).
+
+Core Guidelines:
+1. Always structure clinical explanations into:
+   - Official Definition & Standard Reference (Brunner & Suddarth / DC Dutta / Townsend / Park)
+   - Etiology & Risk Factors
+   - Step-by-Step Pathophysiology Flow
+   - Clinical Manifestations (Signs & Symptoms)
+   - Diagnostic Tests & Lab Values
+   - Medical & Surgical Management
+   - Comprehensive Nursing Process (Assessment, NANDA Diagnosis, Interventions with scientific Rationales, Evaluation)
+   - University Exam "High-Yield" Tips for MUHS / INC exams.
+
+2. Tone: Warm, encouraging, academically rigorous, clinically precise, and patient.
+3. Language & Local Context:
+   - If the student asks in English: respond in clear, refined academic English.
+   - If the student asks in Marathi (or requests "Marathi madhe explain kar"): explain concepts warmly in natural Marathi while retaining standard clinical terms (e.g., "Cardiac Output", "Pulmonary Edema", "NANDA Diagnosis", "Ventricular Septal Defect") in English for academic clarity.
+   - If the student asks in Hinglish/Hindi: respond in natural bilingual Hinglish.
+4. Academic & Statutory Disclaimer: Always maintain that theoretical guidance is strictly for university syllabus preparation and does not replace in-person hospital clinical rotations, bedside postings, or licensed physician orders.`;
+
+  app.post("/api/nursing/ai-tutor", async (req, res) => {
+    try {
+      const { query, topicTitle, subjectName, year, mode } = req.body;
+      const primaryModel = getPrimaryModel();
+      const fallbackModel = getFallbackModel();
+
+      const userPrompt = `Student Query: "${query || 'Explain this topic in detail'}"
+Context:
+- Subject: ${subjectName || 'B.Sc Nursing Clinical Science'}
+- Topic: ${topicTitle || 'Nursing Theory'}
+- Academic Year: ${year || '3rd_year'}
+- Request Mode: ${mode || 'concept_explanation'}
+
+Please provide a structured, high-yield academic response tailored for B.Sc Nursing university examinations (MUHS / INC). Include key clinical definitions, pathophysiology sequence, NANDA nursing diagnoses with rationales, and university exam writing tips.`;
+
+      let text = "";
+      try {
+        const response = await generateContentWithRetry({
+          model: primaryModel,
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          systemInstruction: NURSING_ACADEMIC_SYSTEM_PROMPT,
+          temperature: 0.4
+        });
+        text = response.text || "";
+      } catch (e1: any) {
+        logAiError("Primary Nursing AI Tutor failed, attempting fallback", e1);
+        const fallbackResp = await generateContentWithRetry({
+          model: fallbackModel,
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          systemInstruction: NURSING_ACADEMIC_SYSTEM_PROMPT,
+          temperature: 0.4
+        });
+        text = fallbackResp.text || "";
+      }
+
+      return res.json({
+        success: true,
+        text,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      logAiError("Nursing AI Tutor Route Error", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate nursing tutor response.",
+        details: err?.message
+      });
+    }
+  });
+
+  // =========================================================================
+  // IIT MADRAS BS DEGREE LEARNING HUB BACKEND APIs
+  // =========================================================================
+
+  const IITM_SYSTEM_PROMPT = `You are the Lead Mathematics & Statistics Professor and Teaching Assistant for the IIT Madras BS Degree Foundation Level program.
+
+Your specialty covers:
+1. Mathematics 1 (BSMA1001): Relations, functions, inverses, polynomials, roots, straight lines, slopes, quadratic equations, vertex form, matrices, determinants, row echelon form, system of linear equations Ax = b, consistency, and Gaussian elimination.
+2. Statistics 1 (BSST1001): Categorical vs numerical data (nominal, ordinal, interval, ratio), central tendency (mean, median, mode), dispersion (variance, standard deviation, IQR, box plots, Tukey 1.5*IQR rule), probability axioms, conditional probability, Bayes theorem, discrete random variables, PMF and CDF.
+
+Tone: Rigorous, clear, academic, structured, and pedagogical.
+Format equations cleanly with standard text and Unicode symbols (², ³, √, π, ∑, ∩, ∪, ∈, ℝ).`;
+
+  app.post("/api/iitm/notes", async (req, res) => {
+    try {
+      const { subjectId, subjectName, lectureTitle } = req.body;
+      const primaryModel = getPrimaryModel();
+      const fallbackModel = getFallbackModel();
+
+      const userPrompt = `Generate comprehensive, exam-ready study notes and a complete formula sheet for:
+Course: IIT Madras BS Degree Foundation Level
+Subject: ${subjectName || (subjectId === 'stats_1' ? 'Statistics 1' : 'Mathematics 1')}
+Lecture Context: ${lectureTitle || 'Foundation OneShot | All Concepts & PYQs'}
+Focus: Qualifier Exam & Quiz 1 Preparation
+
+Structure the notes into:
+1. Subject & Lecture Overview
+2. Key Formulas & Mathematical Definitions (clearly boxed or listed with notes)
+3. Step-by-Step Concept Breakdown & Problem-Solving Algorithms
+4. Common Mistakes & Qualifier Exam High-Yield Tips
+5. 3 Worked Practice Examples with step-by-step solutions.`;
+
+      let text = "";
+      try {
+        const response = await generateContentWithRetry({
+          model: primaryModel,
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          systemInstruction: IITM_SYSTEM_PROMPT,
+          temperature: 0.3
+        });
+        text = response.text || "";
+      } catch (e1: any) {
+        logAiError("Primary IITM Notes failed, attempting fallback", e1);
+        const fallbackResp = await generateContentWithRetry({
+          model: fallbackModel,
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          systemInstruction: IITM_SYSTEM_PROMPT,
+          temperature: 0.3
+        });
+        text = fallbackResp.text || "";
+      }
+
+      return res.json({
+        success: true,
+        notes: text,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      logAiError("IITM Notes API Error", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate IIT Madras BS notes.",
+        details: err?.message
+      });
+    }
+  });
+
+  app.post("/api/iitm/quiz", async (req, res) => {
+    try {
+      const { subjectId, subjectName, count } = req.body;
+      const primaryModel = getPrimaryModel();
+
+      const userPrompt = `Generate ${count || 5} multiple choice questions (MCQs) for:
+Course: IIT Madras BS Degree Foundation Level
+Subject: ${subjectName || (subjectId === 'stats_1' ? 'Statistics 1' : 'Mathematics 1')}
+Exam: Qualifier Exam & Quiz 1 level
+
+Return ONLY a valid JSON array of objects with the exact schema:
+[
+  {
+    "id": "iitm-q1",
+    "question": "Clear problem statement with mathematical symbols",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctOptionIndex": 0,
+    "explanation": "Detailed step-by-step mathematical reasoning",
+    "isVerifiedPyq": false,
+    "questionType": "AI_PRACTICE",
+    "topicTag": "Specific Subtopic Name"
+  }
+]`;
+
+      const response = await generateContentWithRetry({
+        model: primaryModel,
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        systemInstruction: IITM_SYSTEM_PROMPT + "\nOutput strictly valid JSON with no markdown backticks.",
+        temperature: 0.2
+      });
+
+      const raw = response.text || "";
+      const cleanedJson = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(cleanedJson);
+
+      return res.json({
+        success: true,
+        questions: parsed,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      logAiError("IITM Quiz API Error", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate IIT Madras BS quiz questions.",
+        details: err?.message
+      });
+    }
   });
 
   // Vite middleware for dev / static for prod

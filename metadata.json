@@ -1,6 +1,6 @@
 {
   "name": "NEETDrop AI",
-  "description": "Distraction-free AI learning platform for NEET 2027 Droppers with curated lectures, NCERT notes, PYQs, and revision analytics.",
+  "description": "Distraction-free AI learning platform for NEET 2027, MUHS B.Sc Nursing, and IIT Madras BS Degree students with curated lectures, formula sheets, NCERT notes, and university exam preparation.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

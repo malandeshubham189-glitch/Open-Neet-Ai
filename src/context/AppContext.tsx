@@ -41,7 +41,11 @@ export type AppView =
   | 'mcq'
   | 'ncert'
   | 'pyq'
-  | 'test';
+  | 'test'
+  | 'nursing-dashboard'
+  | 'nursing-topic-detail'
+  | 'iitm-dashboard'
+  | 'iitm-lecture-room';
 
 export interface StudentMetrics {
   totalWatchTimeMinutes: number;
@@ -121,6 +125,18 @@ interface AppContextType {
   getEngineAnalytics: () => EngineAnalytics;
   getWeakTopicRecoveryPlan: () => WeakTopicItem[];
 
+  // Multi-Course Architecture (NEET 2027 vs B.Sc Nursing vs IIT Madras BS)
+  activeCourse: 'neet' | 'nursing' | 'iitm';
+  setActiveCourse: (course: 'neet' | 'nursing' | 'iitm') => void;
+  selectedNursingTopicId: string;
+  setSelectedNursingTopicId: (id: string) => void;
+  openNursingTopicDetail: (topicId: string) => void;
+
+  // IIT Madras BS Degree
+  selectedIITMSubjectId: 'math_1' | 'stats_1';
+  setSelectedIITMSubjectId: (id: 'math_1' | 'stats_1') => void;
+  openIITMLecture: (subjectId: 'math_1' | 'stats_1') => void;
+
   // Global AI Mentor Chat Modal
   isAIMentorModalOpen: boolean;
   initialMentorQuery: string;
@@ -137,6 +153,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedTopicId, setSelectedTopicId] = useState<string>('topic-phy-moi');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<SubjectId | 'all'>('all');
   const [distractionFreeMode, setDistractionFreeMode] = useState<boolean>(false);
+
+  // Multi-Course Architecture (NEET 2027 vs B.Sc Nursing vs IIT Madras BS)
+  const [activeCourse, setActiveCourseState] = useState<'neet' | 'nursing' | 'iitm'>('nursing');
+  const [selectedNursingTopicId, setSelectedNursingTopicId] = useState<string>('topic-msn2-stroke');
+  const [selectedIITMSubjectId, setSelectedIITMSubjectId] = useState<'math_1' | 'stats_1'>('math_1');
+
+  const setActiveCourse = (course: 'neet' | 'nursing' | 'iitm') => {
+    setActiveCourseState(course);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}_active_course`, course);
+    } catch {
+      // Ignore
+    }
+    if (course === 'nursing') {
+      setCurrentView('nursing-dashboard');
+    } else if (course === 'iitm') {
+      setCurrentView('iitm-dashboard');
+    } else {
+      setCurrentView('dashboard');
+    }
+  };
+
+  const openNursingTopicDetail = (topicId: string) => {
+    setSelectedNursingTopicId(topicId);
+    setCurrentView('nursing-topic-detail');
+  };
+
+  const openIITMLecture = (subjectId: 'math_1' | 'stats_1') => {
+    setSelectedIITMSubjectId(subjectId);
+    setCurrentView('iitm-lecture-room');
+  };
 
   // Persistence States
   const [topicProgress, setTopicProgress] = useState<Record<string, UserTopicProgress>>({});
@@ -870,6 +917,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getTodayPlan,
         getEngineAnalytics,
         getWeakTopicRecoveryPlan,
+        activeCourse,
+        setActiveCourse,
+        selectedNursingTopicId,
+        setSelectedNursingTopicId,
+        openNursingTopicDetail,
+        selectedIITMSubjectId,
+        setSelectedIITMSubjectId,
+        openIITMLecture,
         isAIMentorModalOpen,
         initialMentorQuery,
         openAIMentorModal,
