@@ -12,7 +12,21 @@ import {
   TargetScoreConfig,
   BacklogSummary
 } from '../types';
+import {
+  CourseId,
+  CanonicalCourseId,
+  CourseConfig,
+  CourseNavigationState,
+  AIActiveCourseContext
+} from '../types/course';
+import {
+  COURSES_CONFIG,
+  toCanonicalCourseId,
+  DEFAULT_COURSE_NAVIGATION_STATE
+} from '../config/courses';
 import { getAllTopics, getTopicById, getChapterById } from '../data/curriculumData';
+import { getNursingTopicById } from '../data/nursingCurriculumData';
+import { IITMService } from '../services/iitmService';
 import { TARGET_SCORE_CONFIGS } from '../services/lectureService';
 import {
   AIStudyEngine,
@@ -45,7 +59,8 @@ export type AppView =
   | 'nursing-dashboard'
   | 'nursing-topic-detail'
   | 'iitm-dashboard'
-  | 'iitm-lecture-room';
+  | 'iitm-lecture-room'
+  | 'iitm-week-room';
 
 export interface StudentMetrics {
   totalWatchTimeMinutes: number;
@@ -126,8 +141,13 @@ interface AppContextType {
   getWeakTopicRecoveryPlan: () => WeakTopicItem[];
 
   // Multi-Course Architecture (NEET 2027 vs B.Sc Nursing vs IIT Madras BS)
-  activeCourse: 'neet' | 'nursing' | 'iitm';
-  setActiveCourse: (course: 'neet' | 'nursing' | 'iitm') => void;
+  activeCourse: CourseId;
+  canonicalActiveCourse: CanonicalCourseId;
+  setActiveCourse: (course: CourseId) => void;
+  switchCourse: (course: CourseId) => void;
+  courseConfig: CourseConfig;
+  courseNavMemory: CourseNavigationState;
+  getAIActiveCourseContext: () => AIActiveCourseContext;
   selectedNursingTopicId: string;
   setSelectedNursingTopicId: (id: string) => void;
   openNursingTopicDetail: (topicId: string) => void;
@@ -136,6 +156,13 @@ interface AppContextType {
   selectedIITMSubjectId: 'math_1' | 'stats_1';
   setSelectedIITMSubjectId: (id: 'math_1' | 'stats_1') => void;
   openIITMLecture: (subjectId: 'math_1' | 'stats_1') => void;
+  selectedIITMWeekId: 'week_1' | 'week_2' | 'week_3' | 'week_4';
+  setSelectedIITMWeekId: (weekId: 'week_1' | 'week_2' | 'week_3' | 'week_4') => void;
+  selectedIITMLessonId?: string;
+  setSelectedIITMLessonId: (id?: string) => void;
+  openIITMWeekLesson: (weekId: 'week_1' | 'week_2' | 'week_3' | 'week_4', lessonId?: string, subjectId?: 'math_1' | 'stats_1') => void;
+  iitmActiveTrack: 'playlist' | 'oneshot';
+  setIITMActiveTrack: (track: 'playlist' | 'oneshot') => void;
 
   // Global AI Mentor Chat Modal
   isAIMentorModalOpen: boolean;
@@ -155,24 +182,176 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [distractionFreeMode, setDistractionFreeMode] = useState<boolean>(false);
 
   // Multi-Course Architecture (NEET 2027 vs B.Sc Nursing vs IIT Madras BS)
-  const [activeCourse, setActiveCourseState] = useState<'neet' | 'nursing' | 'iitm'>('nursing');
-  const [selectedNursingTopicId, setSelectedNursingTopicId] = useState<string>('topic-msn2-stroke');
-  const [selectedIITMSubjectId, setSelectedIITMSubjectId] = useState<'math_1' | 'stats_1'>('math_1');
-
-  const setActiveCourse = (course: 'neet' | 'nursing' | 'iitm') => {
-    setActiveCourseState(course);
+  const [activeCourse, setActiveCourseState] = useState<CourseId>(() => {
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}_active_course`, course);
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}_active_course`);
+      if (saved) return saved as CourseId;
     } catch {
       // Ignore
     }
-    if (course === 'nursing') {
-      setCurrentView('nursing-dashboard');
-    } else if (course === 'iitm') {
-      setCurrentView('iitm-dashboard');
-    } else {
-      setCurrentView('dashboard');
+    return 'neet';
+  });
+
+  const [courseNavMemory, setCourseNavMemory] = useState<CourseNavigationState>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}_course_nav_memory`);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // Ignore
     }
+    return DEFAULT_COURSE_NAVIGATION_STATE;
+  });
+
+  const [selectedNursingTopicId, setSelectedNursingTopicId] = useState<string>('topic-msn2-stroke');
+  const [selectedIITMSubjectId, setSelectedIITMSubjectId] = useState<'math_1' | 'stats_1'>('math_1');
+  const [selectedIITMWeekId, setSelectedIITMWeekId] = useState<'week_1' | 'week_2' | 'week_3' | 'week_4'>('week_1');
+  const [selectedIITMLessonId, setSelectedIITMLessonId] = useState<string | undefined>('iitm-m1-w1-l1');
+  const [iitmActiveTrack, setIITMActiveTrack] = useState<'playlist' | 'oneshot'>('playlist');
+
+  const canonicalActiveCourse = toCanonicalCourseId(activeCourse);
+  const courseConfig = COURSES_CONFIG[canonicalActiveCourse] || COURSES_CONFIG.neet;
+
+  const switchCourse = (targetCourse: CourseId) => {
+    const fromCanonical = toCanonicalCourseId(activeCourse);
+    const toCanonical = toCanonicalCourseId(targetCourse);
+
+    // Save outgoing state to memory
+    const updatedMemory: CourseNavigationState = {
+      ...courseNavMemory,
+      [fromCanonical]: {
+        ...(fromCanonical === 'neet'
+          ? {
+              view: currentView,
+              selectedTopicId,
+              selectedSubjectFilter
+            }
+          : fromCanonical === 'nursing'
+          ? {
+              view: currentView,
+              selectedNursingTopicId,
+              selectedYear: '3rd_year'
+            }
+          : {
+              view: currentView,
+              selectedIITMSubjectId,
+              selectedIITMWeekId,
+              selectedIITMLessonId,
+              iitmActiveTrack
+            })
+      }
+    };
+
+    setCourseNavMemory(updatedMemory);
+    setActiveCourseState(toCanonical);
+
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}_active_course`, toCanonical);
+      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}_course_nav_memory`, JSON.stringify(updatedMemory));
+    } catch {
+      // Ignore
+    }
+
+    // Restore incoming state from memory
+    if (toCanonical === 'nursing') {
+      const nursingState = updatedMemory.nursing;
+      const destView =
+        nursingState &&
+        (nursingState.view === 'nursing-dashboard' || nursingState.view === 'nursing-topic-detail')
+          ? (nursingState.view as AppView)
+          : 'nursing-dashboard';
+      if (nursingState?.selectedNursingTopicId) {
+        setSelectedNursingTopicId(nursingState.selectedNursingTopicId);
+      }
+      setCurrentView(destView);
+    } else if (toCanonical === 'iitm_bs') {
+      const iitmState = updatedMemory.iitm_bs;
+      const destView =
+        iitmState &&
+        (iitmState.view === 'iitm-dashboard' ||
+          iitmState.view === 'iitm-week-room' ||
+          iitmState.view === 'iitm-lecture-room')
+          ? (iitmState.view as AppView)
+          : 'iitm-dashboard';
+      if (iitmState?.selectedIITMSubjectId) {
+        setSelectedIITMSubjectId(iitmState.selectedIITMSubjectId);
+      }
+      if (iitmState?.selectedIITMWeekId) {
+        setSelectedIITMWeekId(iitmState.selectedIITMWeekId);
+      }
+      if (iitmState?.selectedIITMLessonId) {
+        setSelectedIITMLessonId(iitmState.selectedIITMLessonId);
+      }
+      if (iitmState?.iitmActiveTrack) {
+        setIITMActiveTrack(iitmState.iitmActiveTrack);
+      }
+      setCurrentView(destView);
+    } else {
+      // NEET
+      const neetState = updatedMemory.neet;
+      const destView =
+        neetState &&
+        neetState.view !== 'landing' &&
+        !neetState.view.startsWith('nursing-') &&
+        !neetState.view.startsWith('iitm-')
+          ? (neetState.view as AppView)
+          : 'dashboard';
+      if (neetState?.selectedTopicId) {
+        setSelectedTopicId(neetState.selectedTopicId);
+      }
+      if (neetState?.selectedSubjectFilter) {
+        setSelectedSubjectFilter(neetState.selectedSubjectFilter as SubjectId | 'all');
+      }
+      setCurrentView(destView);
+    }
+  };
+
+  const setActiveCourse = (course: CourseId) => {
+    switchCourse(course);
+  };
+
+  const getAIActiveCourseContext = (): AIActiveCourseContext => {
+    if (canonicalActiveCourse === 'nursing') {
+      const nursingTopic = getNursingTopicById(selectedNursingTopicId);
+      return {
+        courseId: 'nursing',
+        courseName: 'B.Sc Nursing',
+        examOrDegree: 'B.Sc Nursing (MUHS University Exams)',
+        currentSubject: nursingTopic?.subjectName || 'Medical-Surgical Nursing II',
+        currentChapterOrUnit: nursingTopic?.unitTitle || 'Adult Health & Clinical Nursing',
+        currentTopicOrLesson: nursingTopic?.title || 'Stroke & Neurological Nursing Management',
+        currentWeekOrYear: '3rd Year',
+        progressSummary: 'MUHS Nursing Syllabus, Theory Notes & Clinical Care Plans'
+      };
+    }
+
+    if (canonicalActiveCourse === 'iitm_bs') {
+      const subjectLabel =
+        selectedIITMSubjectId === 'math_1'
+          ? 'Mathematics for Data Science 1 (BSMA1001)'
+          : 'Statistics for Data Science 1 (BSMS1001)';
+      const weekLabel = `Foundation Week ${selectedIITMWeekId.replace('week_', '')}`;
+      return {
+        courseId: 'iitm_bs',
+        courseName: 'IIT Madras BS Degree',
+        examOrDegree: 'Foundation Level Qualifier & Quiz 1 Exam',
+        currentSubject: subjectLabel,
+        currentWeekOrYear: weekLabel,
+        currentTopicOrLesson: selectedIITMLessonId || 'Sequential Playlist Curriculum',
+        progressSummary: 'Zero-Skip Playlist Track, AI Notes, Formulas & Qualifier Practice'
+      };
+    }
+
+    // NEET
+    const neetTopic = getTopicById(selectedTopicId);
+    return {
+      courseId: 'neet',
+      courseName: 'NEET',
+      examOrDegree: 'NEET 2027 Medical Entrance Examination',
+      currentSubject: selectedSubjectFilter !== 'all' ? selectedSubjectFilter : neetTopic?.subjectId || 'Physics, Chemistry, Biology',
+      currentChapterOrUnit: neetTopic?.chapterName || 'High-Yield NEET Chapters',
+      currentTopicOrLesson: neetTopic?.title || 'Core Syllabus Concepts',
+      progressSummary: 'Score 650+ Target Mode, NCERT Line-by-Line Mastery & Spaced Revision'
+    };
   };
 
   const openNursingTopicDetail = (topicId: string) => {
@@ -182,7 +361,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openIITMLecture = (subjectId: 'math_1' | 'stats_1') => {
     setSelectedIITMSubjectId(subjectId);
+    setIITMActiveTrack('oneshot');
     setCurrentView('iitm-lecture-room');
+  };
+
+  const openIITMWeekLesson = (
+    weekId: 'week_1' | 'week_2' | 'week_3' | 'week_4',
+    lessonId?: string,
+    subjectId?: 'math_1' | 'stats_1'
+  ) => {
+    setSelectedIITMWeekId(weekId);
+    if (subjectId) {
+      setSelectedIITMSubjectId(subjectId);
+    }
+    setIITMActiveTrack('playlist');
+    if (lessonId) {
+      setSelectedIITMLessonId(lessonId);
+    }
+    setCurrentView('iitm-week-room');
   };
 
   // Persistence States
@@ -918,13 +1114,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getEngineAnalytics,
         getWeakTopicRecoveryPlan,
         activeCourse,
+        canonicalActiveCourse,
         setActiveCourse,
+        switchCourse,
+        courseConfig,
+        courseNavMemory,
+        getAIActiveCourseContext,
         selectedNursingTopicId,
         setSelectedNursingTopicId,
         openNursingTopicDetail,
         selectedIITMSubjectId,
         setSelectedIITMSubjectId,
         openIITMLecture,
+        selectedIITMWeekId,
+        setSelectedIITMWeekId,
+        selectedIITMLessonId,
+        setSelectedIITMLessonId,
+        openIITMWeekLesson,
+        iitmActiveTrack,
+        setIITMActiveTrack,
         isAIMentorModalOpen,
         initialMentorQuery,
         openAIMentorModal,

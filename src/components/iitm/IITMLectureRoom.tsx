@@ -5,6 +5,8 @@ import {
   IITMUserProgress,
   IITMQuizQuestion
 } from '../../types/iitm';
+import { StructuredNotes } from '../../types/notes';
+import { StructuredNotesRenderer } from '../notes/StructuredNotesRenderer';
 import {
   IITM_SUBJECTS_METADATA
 } from '../../data/iitmData';
@@ -54,7 +56,7 @@ export const IITMLectureRoom: React.FC<IITMLectureRoomProps> = ({
   const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
 
   // AI Notes State
-  const [notesContent, setNotesContent] = useState<string>('');
+  const [notesContent, setNotesContent] = useState<StructuredNotes | string>('');
   const [isGeneratingNotes, setIsGeneratingNotes] = useState<boolean>(false);
   const [copiedNotes, setCopiedNotes] = useState<boolean>(false);
 
@@ -82,24 +84,9 @@ export const IITMLectureRoom: React.FC<IITMLectureRoomProps> = ({
   }, [subjectId]);
 
   const loadStructuredNotes = async () => {
-    const staticNotes = IITMService.getStructuredNotes(subjectId);
     if (!notesContent) {
-      const defaultText = `### 📘 ${meta.title} — Study Notes & Formula Sheet
-**Course**: IIT Madras BS Degree Foundation Level
-**Focus**: Qualifier Exam & Quiz 1 Preparation
-
-#### Overview
-${staticNotes.overview}
-
-#### 🔑 Key Mathematical & Statistical Formulas
-${staticNotes.keyFormulas.map((f) => `- **${f.label}**:\n  \`${f.formula}\`\n  *Note*: ${f.note}`).join('\n\n')}
-
-#### 💡 High-Yield Concept Breakdown
-${staticNotes.highYieldConcepts.map((c) => `##### ${c.heading}\n${c.points.map((p) => `- ${p}`).join('\n')}`).join('\n\n')}
-
-#### 🎯 Qualifier Exam & Quiz 1 Strategy
-${staticNotes.qualifierTips.map((t) => `- ${t}`).join('\n')}`;
-      setNotesContent(defaultText);
+      const initialNotes = await IITMService.fetchAiNotes(subjectId);
+      setNotesContent(initialNotes);
     }
   };
 
@@ -138,15 +125,17 @@ ${staticNotes.qualifierTips.map((t) => `- ${t}`).join('\n')}`;
 
   const handleCopyNotes = () => {
     if (!notesContent) return;
-    navigator.clipboard.writeText(notesContent);
+    const textToCopy = typeof notesContent === 'string' ? notesContent : JSON.stringify(notesContent, null, 2);
+    navigator.clipboard.writeText(textToCopy);
     setCopiedNotes(true);
     setTimeout(() => setCopiedNotes(false), 2000);
   };
 
   const handleDownloadNotes = () => {
     if (!notesContent) return;
+    const textToDownload = typeof notesContent === 'string' ? notesContent : JSON.stringify(notesContent, null, 2);
     const element = document.createElement('a');
-    const file = new Blob([notesContent], { type: 'text/plain;charset=utf-8' });
+    const file = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
     element.download = `${meta.code}_${meta.title.replace(/\s+/g, '_')}_Notes.md`;
     document.body.appendChild(element);
@@ -379,52 +368,40 @@ ${staticNotes.qualifierTips.map((t) => `- ${t}`).join('\n')}`;
         </div>
       )}
 
-      {/* 4. STEP 2: GENERATE NOTES */}
+      {/* 4. STEP 2: STRUCTURED NOTES */}
       {currentStep === 2 && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200">
             <div>
               <h2 className="text-base sm:text-lg font-black text-slate-900">
-                Step 2: AI Study Notes & Formula Sheet
+                Step 2: Structured Study Notes & Formula Sheet
               </h2>
               <p className="text-xs text-slate-500">
-                Exam-ready summaries, formulas, and proofs tailored specifically for {meta.title}
+                Parsed educational reading format tailored specifically for {meta.title}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={handleGenerateAiNotes}
-                disabled={isGeneratingNotes}
-                className="flex items-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>{isGeneratingNotes ? 'Generating AI Notes...' : 'Regenerate Notes'}</span>
-              </button>
-
-              <button
-                onClick={handleCopyNotes}
-                className="flex items-center gap-1.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition-all cursor-pointer"
-              >
-                {copiedNotes ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedNotes ? 'Copied' : 'Copy'}</span>
-              </button>
-
-              <button
-                onClick={handleDownloadNotes}
-                className="flex items-center gap-1.5 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition-all cursor-pointer"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>Download .MD</span>
-              </button>
-            </div>
+            <button
+              onClick={handleGenerateAiNotes}
+              disabled={isGeneratingNotes}
+              className="flex items-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition-all cursor-pointer disabled:opacity-50 shadow-sm shadow-indigo-500/20"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{isGeneratingNotes ? 'Generating Notes...' : 'AI Deep Summary'}</span>
+            </button>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-            <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-line">
-              {notesContent}
-            </div>
-          </div>
+          <StructuredNotesRenderer
+            notes={notesContent}
+            courseTitle="IIT Madras BS Degree"
+            subjectTitle={meta.title}
+            weekNumber={1}
+            lessonTitle={meta.lectureResource.title}
+            onProceedToPractice={() => {
+              IITMService.saveProgress(subjectId, { notesGenerated: true });
+              handleStepChange(3);
+            }}
+          />
 
           <div className="flex justify-between pt-2">
             <button

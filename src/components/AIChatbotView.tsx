@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import ReactMarkdown from 'react-markdown';
 import { TeacherFormattedMessage } from './TeacherFormattedMessage';
+import { DiagramMessageRenderer } from './DiagramMessageRenderer';
+import { parseEducationalMessage } from '../utils/diagramParser';
 import { AI_PERSONAS, PersonaConfig } from './AIMentorChatModal';
 import { indianTTS } from '../utils/indianVoiceTTS';
 import {
@@ -188,9 +190,11 @@ What doubt would you like to clear today?`,
   };
 
   const playTTS = (msgId: string, text: string) => {
+    const { diagramSpec, cleanedText } = parseEducationalMessage(text);
+    const textToSpeak = cleanedText || diagramSpec?.title || 'Interactive educational diagram';
     indianTTS.speakText(
       msgId,
-      text,
+      textToSpeak,
       selectedPersona as any,
       () => setSpeakingMsgId(msgId),
       () => setSpeakingMsgId(null),
@@ -514,7 +518,7 @@ What doubt would you like to clear today?`,
                     {isUser ? (
                       <p className="whitespace-pre-wrap">{m.content}</p>
                     ) : m.content ? (
-                      <TeacherFormattedMessage content={m.content} />
+                      <DiagramMessageRenderer content={m.content} />
                     ) : (
                       <div className="flex items-center gap-2 text-slate-500">
                         <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />

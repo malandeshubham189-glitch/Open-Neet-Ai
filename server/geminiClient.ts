@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, GenerateContentParameters, GenerateContentResponse, Modality } from "@google/genai";
 
 /**
  * Environment Variables helper for Gemini AI Configuration (Server-Side Only)
@@ -22,6 +22,46 @@ export function getApiKey(): string {
   return "";
 }
 
+// Model cooldown tracking (for temporary 429 Quota Exceeded conditions)
+const modelCooldowns = new Map<string, number>();
+
+export function markModelCooldown(model: string, cooldownDurationMs: number = 300000) {
+  modelCooldowns.set(model, Date.now() + cooldownDurationMs);
+  // gemini-flash-latest aliases to gemini-3.7-flash, so cooldown both together
+  if (model.includes("3.7") || model.includes("flash-latest")) {
+    modelCooldowns.set("gemini-3.7-flash", Date.now() + cooldownDurationMs);
+    modelCooldowns.set("gemini-flash-latest", Date.now() + cooldownDurationMs);
+  }
+}
+
+export function isModelInCooldown(model: string): boolean {
+  const until = modelCooldowns.get(model);
+  if (!until) return false;
+  if (Date.now() > until) {
+    modelCooldowns.delete(model);
+    return false;
+  }
+  return true;
+}
+
+export function getAvailableModelsList(preferredModel?: string): string[] {
+  const primary = preferredModel || getPrimaryModel();
+  
+  const allCandidates = [
+    primary,
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.7-flash"
+  ].filter((v, i, a) => Boolean(v) && a.indexOf(v) === i);
+
+  // Exclude cooling models completely from trial if non-cooling models exist
+  const ready = allCandidates.filter((m) => !isModelInCooldown(m));
+  if (ready.length > 0) {
+    return ready;
+  }
+  return allCandidates;
+}
+
 export function getPrimaryModel(): string {
   if (typeof process !== "undefined" && process.env && process.env.GEMINI_MODEL) {
     const envModel = process.env.GEMINI_MODEL.trim();
@@ -29,7 +69,7 @@ export function getPrimaryModel(): string {
       return envModel;
     }
   }
-  return "gemini-3.7-flash";
+  return "gemini-3.1-flash-lite";
 }
 
 export function getFallbackModel(): string {
@@ -39,7 +79,7 @@ export function getFallbackModel(): string {
       return envModel;
     }
   }
-  return "gemini-2.5-flash";
+  return "gemini-3.1-flash-lite";
 }
 
 // Token usage metrics store (Server Memory)
@@ -140,19 +180,9 @@ export async function generateContentWithRetry(
     throw new Error("GOOGLE_AI_API_KEY or GEMINI_API_KEY environment variable is not configured on the server.");
   }
 
-  const primaryModel = options.model || getPrimaryModel();
-  const fallbackModel = getFallbackModel();
+  const modelsToTry = getAvailableModelsList(options.model);
   const maxRetries = options.maxRetries ?? 2;
-  const timeoutMs = options.timeoutMs ?? 18000;
-
-  const modelsToTry = [
-    primaryModel,
-    ...(fallbackModel !== primaryModel ? [fallbackModel] : []),
-    "gemini-3.7-flash",
-    "gemini-2.5-flash",
-    "gemini-flash-latest",
-    "gemini-3.1-flash-lite"
-  ].filter((v, i, a) => a.indexOf(v) === i);
+  const timeoutMs = options.timeoutMs ?? 45000;
 
   let lastError: any = null;
 
@@ -213,6 +243,10 @@ export async function generateContentWithRetry(
           `[Gemini SDK ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : isUnavailableOrBusy ? 'HighDemand503' : 'Error'}] Attempt ${attempt}/${maxRetries} on model "${currentModel}" failed: ${errMsg}`
         );
 
+        if (isQuotaExceeded) {
+          markModelCooldown(currentModel, 60000);
+        }
+
         if (isQuotaExceeded || isNotFound || isTimeout || isUnavailableOrBusy) {
           // Immediately skip remaining retries for this busy/rate-limited model and switch to next candidate model
           const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : isUnavailableOrBusy ? '503 High Demand' : 'Quota Exceeded';
@@ -241,19 +275,9 @@ export async function* generateStreamWithRetry(
     throw new Error("GOOGLE_AI_API_KEY or GEMINI_API_KEY environment variable is not configured on the server.");
   }
 
-  const primaryModel = options.model || getPrimaryModel();
-  const fallbackModel = getFallbackModel();
+  const modelsToTry = getAvailableModelsList(options.model);
   const maxRetries = options.maxRetries ?? 2;
-  const timeoutMs = options.timeoutMs ?? 18000;
-
-  const modelsToTry = [
-    primaryModel,
-    ...(fallbackModel !== primaryModel ? [fallbackModel] : []),
-    "gemini-3.7-flash",
-    "gemini-2.5-flash",
-    "gemini-flash-latest",
-    "gemini-3.1-flash-lite"
-  ].filter((v, i, a) => a.indexOf(v) === i);
+  const timeoutMs = options.timeoutMs ?? 45000;
 
   let lastError: any = null;
 
@@ -294,6 +318,10 @@ export async function* generateStreamWithRetry(
           `[Gemini Stream ${isQuotaExceeded ? 'QuotaExceeded' : isNotFound ? 'NotFound' : isTimeout ? 'Timeout' : isUnavailableOrBusy ? 'HighDemand503' : 'Error'}] Attempt ${attempt}/${maxRetries} failed on model "${currentModel}": ${errMsg}`
         );
 
+        if (isQuotaExceeded) {
+          markModelCooldown(currentModel, 60000);
+        }
+
         if (isQuotaExceeded || isNotFound || isTimeout || isUnavailableOrBusy) {
           const reason = isTimeout ? 'Request Timeout' : isNotFound ? '404 Not Found' : isUnavailableOrBusy ? '503 High Demand' : 'Quota Exceeded';
           console.warn(`[Gemini Stream Fallback] Fast-switching from ${currentModel} to next candidate model (${reason})...`);
@@ -309,3 +337,129 @@ export async function* generateStreamWithRetry(
 
   throw lastError || new Error("Failed to stream response after retries.");
 }
+
+/**
+ * Converts raw PCM audio buffer to a standard WAV audio Buffer
+ */
+export function pcmToWavBuffer(
+  pcmBuffer: Buffer,
+  sampleRate = 24000,
+  numChannels = 1,
+  bitDepth = 16
+): Buffer {
+  const byteRate = (sampleRate * numChannels * bitDepth) / 8;
+  const blockAlign = (numChannels * bitDepth) / 8;
+  const dataSize = pcmBuffer.length;
+  const chunkSize = 36 + dataSize;
+
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0);
+  header.writeUInt32LE(chunkSize, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // 1 = Linear PCM
+  header.writeUInt16LE(numChannels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitDepth, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(dataSize, 40);
+
+  return Buffer.concat([header, pcmBuffer]);
+}
+
+/**
+ * High Definition Text-to-Speech using Gemini 3.1 Flash TTS Model
+ */
+export async function generateGeminiTTS(
+  text: string,
+  persona: string = "brother",
+  customVoice?: string
+): Promise<{
+  audioBase64: string;
+  mimeType: string;
+  voiceUsed: string;
+  modelUsed: string;
+}> {
+  const client = getGeminiClient();
+  if (!client) {
+    throw new Error("Gemini API Key is not configured on the server.");
+  }
+
+  // Prebuilt voices supported by gemini-3.1-flash-tts-preview:
+  // 'Fenrir' (Deep, mature, authoritative & warm educator), 'Puck' (Warm, engaging male),
+  // 'Charon' (Deep narrator), 'Zephyr' (Crisp, articulate male), 'Kore' (Female)
+  const voiceMapping: Record<string, string> = {
+    brother: "Fenrir",
+    teacher: "Fenrir",
+    mentor: "Fenrir",
+    narrator: "Charon",
+    puck: "Puck",
+    fenrir: "Fenrir",
+    zephyr: "Zephyr",
+    charon: "Charon",
+    sister: "Kore"
+  };
+
+  const selectedVoice = customVoice || voiceMapping[persona?.toLowerCase()] || "Fenrir";
+  const modelName = "gemini-3.1-flash-tts-preview";
+
+  const cleanPrompt = text
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/[#*`_~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const response = await client.models.generateContent({
+    model: modelName,
+    contents: [
+      {
+        parts: [
+          {
+            text: `Speak in a calm, mature, warm, highly articulative educator voice with natural cadence, clear pronunciation of scientific terms, and supportive teacher tone: ${cleanPrompt}`
+          }
+        ]
+      }
+    ],
+    config: {
+      responseModalities: [Modality.AUDIO],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: selectedVoice
+          }
+        }
+      }
+    }
+  });
+
+  const part = response.candidates?.[0]?.content?.parts?.[0];
+  const rawBase64 = part?.inlineData?.data;
+  const returnedMime = part?.inlineData?.mimeType || "audio/pcm;rate=24000";
+
+  if (!rawBase64) {
+    throw new Error("Gemini TTS response did not contain audio data.");
+  }
+
+  // If the model returned PCM, package it into a valid WAV audio buffer for browser playback
+  if (returnedMime.includes("pcm") || returnedMime.includes("rate=24000") || !returnedMime.includes("wav")) {
+    const rawBuffer = Buffer.from(rawBase64, "base64");
+    const wavBuffer = pcmToWavBuffer(rawBuffer, 24000, 1, 16);
+    return {
+      audioBase64: wavBuffer.toString("base64"),
+      mimeType: "audio/wav",
+      voiceUsed: selectedVoice,
+      modelUsed: modelName
+    };
+  }
+
+  return {
+    audioBase64: rawBase64,
+    mimeType: returnedMime,
+    voiceUsed: selectedVoice,
+    modelUsed: modelName
+  };
+}
+

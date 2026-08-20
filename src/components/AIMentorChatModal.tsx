@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { TeacherFormattedMessage } from './TeacherFormattedMessage';
+import { DiagramMessageRenderer } from './DiagramMessageRenderer';
+import { parseEducationalMessage } from '../utils/diagramParser';
 import { indianTTS } from '../utils/indianVoiceTTS';
 import {
   Bot,
@@ -167,10 +169,13 @@ Select a persona or upload an image to start!`,
 };
 
 const SUGGESTED_PROMPTS = [
-  '🫀 NCERT Class 11 Human Heart Sectional View Diagram & Blood Flow',
+  '🫀 Draw NCERT Human Heart Diagram & Blood Flow',
+  '🩺 Nephron Structure & Urine Formation Diagram',
+  '🔬 Draw Plant & Animal Cell Organelles Diagram',
+  '📊 Normal Distribution Bell Curve Diagram',
+  '🔍 Convex Lens Ray Diagram & Image Formation',
   '⚡ Explain Moment of Inertia tricks & formulas',
   '🧪 Explain GOC acidic strength order',
-  '🧬 How to revise Class 11 Biology in 3 weeks?',
   '🎯 Strategy to score 160+ in Physics for NEET'
 ];
 
@@ -183,7 +188,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState<{ lastQuery: string; message: string } | null>(null);
-  const [modelUsed, setModelUsed] = useState('gemini-3.7-flash');
+  const [modelUsed, setModelUsed] = useState('gemini-3.1-flash-lite');
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   // New Multi-Persona & Multi-Modal States
@@ -205,7 +210,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
     serverReachable: true,
     backendStatus: 'INITIALIZING',
     geminiConnected: true,
-    currentModel: 'gemini-3.7-flash',
+    currentModel: 'gemini-3.1-flash-lite',
     latencyMs: 0,
     httpStatus: null,
     promptTokens: 0,
@@ -231,7 +236,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
             serverReachable: data.serverReachable ?? true,
             backendStatus: data.backendStatus || 'ACTIVE',
             geminiConnected: data.geminiConnected ?? true,
-            currentModel: data.currentModel || 'gemini-3.7-flash'
+            currentModel: data.currentModel || 'gemini-3.1-flash-lite'
           }));
         })
         .catch(() => {
@@ -405,9 +410,11 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
   };
 
   const playTTS = (msgId: string, text: string) => {
+    const { diagramSpec, cleanedText } = parseEducationalMessage(text);
+    const textToSpeak = cleanedText || diagramSpec?.title || 'Interactive diagram explanation';
     indianTTS.speakText(
       msgId,
-      text,
+      textToSpeak,
       selectedPersona as any,
       () => setSpeakingMsgId(msgId),
       () => setSpeakingMsgId(null),
@@ -496,7 +503,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
       serverReachable: httpStatus !== null,
       backendStatus: httpStatus === 200 ? 'HEALTHY' : `HTTP_${httpStatus || 'ERR'}`,
       geminiConnected: responseData?.success ?? false,
-      currentModel: responseData?.modelUsed || 'gemini-3.7-flash',
+      currentModel: responseData?.modelUsed || 'gemini-3.1-flash-lite',
       latencyMs,
       httpStatus,
       promptTokens: responseData?.promptTokens || 0,
@@ -789,7 +796,7 @@ export const AIMentorChatModal: React.FC<AIMentorChatModalProps> = ({
                 {msg.role === 'user' ? (
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 ) : (
-                  <TeacherFormattedMessage content={msg.content} />
+                  <DiagramMessageRenderer content={msg.content} />
                 )}
 
                 <div className="mt-2.5 flex items-center justify-between text-[10px] pt-1 border-t border-slate-100">

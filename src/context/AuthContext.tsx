@@ -1,16 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { auth, signInWithGoogle, logoutUser } from '../services/firebase';
+import {
+  auth,
+  signUpWithEmail,
+  logInWithEmail,
+  signInWithGoogle,
+  sendPasswordReset,
+  logoutUser,
+  fetchUserProfile,
+  saveUserProfile
+} from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
+  signupWithEmail: (
+    email: string,
+    pass: string,
+    name: string,
+    status?: '1st Drop' | '2nd Drop' | 'Fresher',
+    targetYear?: number
+  ) => Promise<void>;
+  loginWithEmail: (email: string, pass: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   loginAsGuest: (name?: string, status?: '1st Drop' | '2nd Drop' | 'Fresher') => void;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => void;
-  addStudyTimeMinutes: (mins: number) => void;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  addStudyTimeMinutes: (mins: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,23 +44,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let unsubscribe = () => {};
 
     if (auth) {
-      unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
         if (fbUser) {
-          const profile: UserProfile = {
-            uid: fbUser.uid,
-            email: fbUser.email || 'aspiring.dropper@neet.edu',
-            displayName: fbUser.displayName || 'NEET 2027 Aspirant',
-            photoURL: fbUser.photoURL || undefined,
-            isGuest: false,
-            targetYear: 2027,
-            dropperStatus: '1st Drop',
-            streakDays: 14,
-            lastActiveDate: new Date().toISOString(),
-            totalStudyMinutes: 420,
-            createdAt: new Date().toISOString()
-          };
-          setUser(profile);
-          setLoading(false);
+          try {
+            const dbProfile = await fetchUserProfile(fbUser.uid);
+            if (dbProfile) {
+              setUser(dbProfile);
+            } else {
+              const fallback: UserProfile = {
+                uid: fbUser.uid,
+                email: fbUser.email || 'aspiring.dropper@neet.edu',
+                displayName: fbUser.displayName || 'NEET 2027 Aspirant',
+                photoURL: fbUser.photoURL || undefined,
+                isGuest: false,
+                targetYear: 2027,
+                dropperStatus: '1st Drop',
+                streakDays: 14,
+                lastActiveDate: new Date().toISOString().split('T')[0],
+                totalStudyMinutes: 420,
+                createdAt: new Date().toISOString()
+              };
+              setUser(fallback);
+              await saveUserProfile(fallback);
+            }
+          } catch (err) {
+            console.warn("Could not fetch remote profile, using auth fallback:", err);
+          } finally {
+            setLoading(false);
+          }
         } else {
           checkGuestSession();
         }
@@ -60,7 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (saved) {
         setUser(JSON.parse(saved));
       } else {
-        // Auto-initialize default guest user so app works immediately
         createDefaultGuest('NEET Dropper', '1st Drop');
       }
     } catch {
@@ -87,24 +115,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(defaultGuest));
   };
 
-  const loginWithGoogle = async () => {
+  const signupWithEmailHandler = async (
+    email: string,
+    pass: string,
+    name: string,
+    status: '1st Drop' | '2nd Drop' | 'Fresher' = '1st Drop',
+    targetYear: number = 2027
+  ) => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const profile = await signUpWithEmail(email, pass, name, status, targetYear);
+      setUser(profile);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithEmailHandler = async (email: string, pass: string) => {
+    setLoading(true);
+    try {
+      const profile = await logInWithEmail(email, pass);
+      setUser(profile);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogleHandler = async () => {
+    setLoading(true);
+    try {
+      const profile = await signInWithGoogle();
+      setUser(profile);
     } catch (err: any) {
       console.warn("Google sign-in fallback to local session:", err);
-      // If Firebase popup fails or is disabled in sandboxed iframe, create rich user profile locally
       createDefaultGuest('NEET Aspirant (Verified)', '1st Drop');
     } finally {
       setLoading(false);
     }
   };
 
-  const loginAsGuest = (name = 'NEET Dropper', status: '1st Drop' | '2nd Drop' | 'Fresher' = '1st Drop') => {
+  const resetPasswordHandler = async (email: string) => {
+    await sendPasswordReset(email);
+  };
+
+  const loginAsGuestHandler = (name = 'NEET Dropper', status: '1st Drop' | '2nd Drop' | 'Fresher' = '1st Drop') => {
     createDefaultGuest(name, status);
   };
 
-  const logout = async () => {
+  const logoutHandler = async () => {
     setLoading(true);
     try {
       await logoutUser();
@@ -117,21 +175,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = (data: Partial<UserProfile>) => {
+  const updateProfileHandler = async (data: Partial<UserProfile>) => {
     if (!user) return;
     const updated = { ...user, ...data };
     setUser(updated);
     if (user.isGuest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      await saveUserProfile(updated);
     }
   };
 
-  const addStudyTimeMinutes = (mins: number) => {
+  const addStudyTimeMinutesHandler = async (mins: number) => {
     if (!user) return;
     const updated = { ...user, totalStudyMinutes: user.totalStudyMinutes + mins };
     setUser(updated);
     if (user.isGuest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      await saveUserProfile(updated);
     }
   };
 
@@ -140,11 +202,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loading,
-        loginWithGoogle,
-        loginAsGuest,
-        logout,
-        updateProfile,
-        addStudyTimeMinutes
+        signupWithEmail: signupWithEmailHandler,
+        loginWithEmail: loginWithEmailHandler,
+        loginWithGoogle: loginWithGoogleHandler,
+        resetPassword: resetPasswordHandler,
+        loginAsGuest: loginAsGuestHandler,
+        logout: logoutHandler,
+        updateProfile: updateProfileHandler,
+        addStudyTimeMinutes: addStudyTimeMinutesHandler
       }}
     >
       {children}

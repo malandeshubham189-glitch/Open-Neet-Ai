@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Lightbulb, Zap, Target, AlertTriangle, BookOpen } from 'lucide-react';
+import { Lightbulb, Zap, Target, AlertTriangle, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
+import { EducationalDiagram } from './EducationalDiagram';
+import { parseEducationalMessage } from '../utils/diagramParser';
 
 interface TeacherFormattedMessageProps {
   content: string;
@@ -13,7 +15,8 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
   const blocks = content.split(/\n\s*\n/);
 
   return (
-    <div className="space-y-3.5 text-xs sm:text-sm leading-relaxed text-slate-800">
+    <div className="space-y-4 text-xs sm:text-sm leading-relaxed text-slate-800">
+      {/* Render all standard text and specialized card blocks */}
       {blocks.map((block, idx) => {
         const trimmed = block.trim();
         if (!trimmed) return null;
@@ -136,3 +139,4 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
     </div>
   );
 };
+

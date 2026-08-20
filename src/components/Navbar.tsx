@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { CourseSwitcher } from './nursing/CourseSwitcher';
+import { CourseSwitcher } from './navigation/CourseSwitcher';
 import {
   Sparkles,
   Flame,
@@ -30,7 +30,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
     distractionFreeMode,
     setDistractionFreeMode,
     activeCourse,
-    setActiveCourse
+    canonicalActiveCourse,
+    switchCourse
   } = useApp();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -42,79 +43,79 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#E5E7EB] bg-white/95 backdrop-blur-md transition-colors font-sans">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         {/* Left: Brand Logo + Course Switcher */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() =>
-              activeCourse === 'iitm'
+              canonicalActiveCourse === 'iitm_bs'
                 ? setCurrentView('iitm-dashboard')
-                : activeCourse === 'nursing'
+                : canonicalActiveCourse === 'nursing'
                 ? setCurrentView('nursing-dashboard')
                 : setCurrentView('dashboard')
             }
-            className="group flex items-center gap-3 text-left focus:outline-none cursor-pointer"
+            className="group flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none cursor-pointer"
           >
             <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105 ${
-                activeCourse === 'iitm'
+              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105 ${
+                canonicalActiveCourse === 'iitm_bs'
                   ? 'bg-indigo-600'
-                  : activeCourse === 'nursing'
+                  : canonicalActiveCourse === 'nursing'
                   ? 'bg-emerald-600'
                   : 'bg-[#2563EB]'
               }`}
             >
-              {activeCourse === 'iitm' ? (
+              {canonicalActiveCourse === 'iitm_bs' ? (
                 <Calculator className="h-5 w-5" />
-              ) : activeCourse === 'nursing' ? (
+              ) : canonicalActiveCourse === 'nursing' ? (
                 <Stethoscope className="h-5 w-5" />
               ) : (
                 <GraduationCap className="h-5 w-5" />
               )}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold tracking-tight text-[#111827]">
-                  {activeCourse === 'iitm'
-                    ? 'IIT Madras BS'
-                    : activeCourse === 'nursing'
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg font-bold tracking-tight text-[#111827]">
+                  {canonicalActiveCourse === 'iitm_bs'
+                    ? 'IITM BS Degree'
+                    : canonicalActiveCourse === 'nursing'
                     ? 'NursingHub'
                     : 'NEETDrop'}
                 </span>
                 <span
-                  className={`rounded-md px-1.5 py-0.2 text-[10px] font-bold ${
-                    activeCourse === 'iitm'
+                  className={`rounded-md px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold ${
+                    canonicalActiveCourse === 'iitm_bs'
                       ? 'bg-indigo-100 text-indigo-900'
-                      : activeCourse === 'nursing'
+                      : canonicalActiveCourse === 'nursing'
                       ? 'bg-emerald-100 text-emerald-800'
                       : 'bg-[#2563EB]/10 text-[#2563EB]'
                   }`}
                 >
-                  {activeCourse === 'iitm' ? 'BS Degree' : activeCourse === 'nursing' ? 'MUHS' : 'AI'}
+                  {canonicalActiveCourse === 'iitm_bs' ? 'BS Degree' : canonicalActiveCourse === 'nursing' ? 'MUHS' : 'AI'}
                 </span>
               </div>
-              <p className="text-[10px] font-medium text-[#6B7280]">
-                {activeCourse === 'iitm'
-                  ? 'Qualifier & Quiz 1 Marathon'
-                  : activeCourse === 'nursing'
+              <p className="text-[9px] sm:text-[10px] font-medium text-[#6B7280] hidden xs:block">
+                {canonicalActiveCourse === 'iitm_bs'
+                  ? 'Foundation Qualifier Track'
+                  : canonicalActiveCourse === 'nursing'
                   ? 'B.Sc Nursing Theory Mastery'
                   : 'NEET 2027 Syllabus Mission'}
               </p>
             </div>
           </button>
 
-          {/* Prominent Course Switcher Pill */}
+          {/* Prominent Course Switcher Pill on sm+ */}
           <div className="hidden sm:block">
             <CourseSwitcher
               activeCourse={activeCourse}
-              onCourseChange={(course) => setActiveCourse(course)}
+              onCourseChange={(course) => switchCourse(course)}
             />
           </div>
         </div>
 
         {/* Center: Search & Quick Navigation */}
         <div className="hidden lg:flex items-center gap-3">
-          {activeCourse === 'iitm' ? (
+          {canonicalActiveCourse === 'iitm_bs' ? (
             <button
               onClick={() => setCurrentView('iitm-dashboard')}
               className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 text-xs font-semibold text-indigo-950 hover:bg-indigo-100 transition-all cursor-pointer"
@@ -122,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
               <BookOpen className="h-3.5 w-3.5 text-indigo-700" />
               <span>Foundation Subjects (Math 1 & Stats 1)</span>
             </button>
-          ) : activeCourse === 'nursing' ? (
+          ) : canonicalActiveCourse === 'nursing' ? (
             <button
               onClick={() => setCurrentView('nursing-dashboard')}
               className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition-all cursor-pointer"
@@ -150,17 +151,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
         </div>
 
         {/* Right: Countdown, Streak & Auth */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Dec 30 Countdown */}
           <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-[#2563EB]">
             <Clock className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>{daysLeft} Days to Dec 30 Syllabus Deadline</span>
+            <span>{daysLeft} Days to Dec 30 Deadline</span>
           </div>
 
           {/* Streak Counter */}
-          <div className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-            <Flame className="h-4 w-4 text-amber-500 fill-amber-500" />
-            <span>{user?.streakDays || 14}d Streak</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2 sm:px-3 py-1 text-xs font-bold text-amber-700">
+            <Flame className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 fill-amber-500" />
+            <span>{user?.streakDays || 14}d</span>
           </div>
 
           {/* Distraction-Free Toggle */}
@@ -177,24 +178,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
           </button>
 
           {/* User Profile / Auth */}
-          {user ? (
+          {user && !user.isGuest ? (
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-slate-50 p-1.5 pl-2.5 transition-colors hover:bg-slate-100 focus:outline-none"
+                className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-slate-50 p-1.5 pl-2.5 transition-colors hover:bg-slate-100 focus:outline-none cursor-pointer"
               >
-                <div className="flex flex-col items-end text-right">
-                  <span className="text-xs font-bold text-[#111827] max-w-[110px] truncate">{user.displayName}</span>
+                <div className="flex flex-col items-end text-right hidden xs:flex">
+                  <span className="text-xs font-bold text-[#111827] max-w-[100px] truncate">{user.displayName}</span>
                   <span className="text-[10px] font-semibold text-[#2563EB]">{user.dropperStatus}</span>
                 </div>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563EB] text-white font-bold text-xs">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563EB] text-white font-bold text-xs shadow-xs">
                   {user.displayName.charAt(0).toUpperCase()}
                 </div>
               </button>
 
               {/* Profile Dropdown */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2">
                   <div className="border-b border-[#E5E7EB] p-3">
                     <p className="text-xs font-bold text-[#111827]">{user.displayName}</p>
                     <p className="text-[11px] text-[#6B7280] truncate">{user.email}</p>
@@ -234,25 +235,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuthModal, onOpenSearch })
                         setShowProfileMenu(false);
                         logout();
                       }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                     >
                       <LogOut className="h-4 w-4" />
-                      <span>Sign Out</span>
+                      <span>Log Out</span>
                     </button>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <button
-              onClick={onOpenAuthModal}
-              className="flex items-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-all"
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Sign In / Setup</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onOpenAuthModal}
+                className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-3 sm:px-4 py-2 text-xs font-bold text-white shadow-sm transition-all active:scale-95 cursor-pointer"
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>Sign In / Sign Up</span>
+              </button>
+            </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile-only Persistent Course Switcher Bar */}
+      <div className="sm:hidden px-3 py-1.5 bg-slate-50/95 border-t border-slate-200/80 flex items-center justify-center">
+        <CourseSwitcher
+          activeCourse={activeCourse}
+          onCourseChange={(course) => switchCourse(course)}
+          compact={true}
+        />
       </div>
     </header>
   );

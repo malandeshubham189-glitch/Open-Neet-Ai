@@ -1,0 +1,542 @@
+{
+  "playlistId": "PLZ2ps__7DhBb1AyRNidKBrk_N5eTpVQRA",
+  "playlistTitle": "Mathematics for data Science - 1 (Hindi)",
+  "totalDiscovered": 89,
+  "totalImported": 89,
+  "videos": [
+    {
+      "playlistOrder": 1,
+      "videoId": "WVYzSqyYvaw",
+      "title": "W1_L1_Natural Numbers and their operations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 2,
+      "videoId": "2l57igoPTk0",
+      "title": "W1_L2_Rational Numbers",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 3,
+      "videoId": "UhcZh0Ys3DA",
+      "title": "W1_L3_Real and Complex Numbers",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 4,
+      "videoId": "UNOyC-peQ6A",
+      "title": "W1_L4_Set Theory",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 5,
+      "videoId": "SoJSBzoAACY",
+      "title": "W1_L5_Construction of Subset",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 6,
+      "videoId": "WOLhm5WmY8o",
+      "title": "W1_L6_Set Examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 7,
+      "videoId": "qdXzECQJjnQ",
+      "title": "W1_L7_Example of set operations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 8,
+      "videoId": "xmZy9vOcXv8",
+      "title": "W1_L8_Relations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 9,
+      "videoId": "SIJA0-QyhuM",
+      "title": "W1_L9_Functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 10,
+      "videoId": "s3LlomV7ULI",
+      "title": "W1_L10_Relations Examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 11,
+      "videoId": "68gZu0aeg-A",
+      "title": "W1_L11_Function Examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 12,
+      "videoId": "UPdKjINdxKk",
+      "title": "W2_L1_Rectangular coordinate system",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 13,
+      "videoId": "-6-h_c1FsPk",
+      "title": "W2_L2_Distance formula",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 14,
+      "videoId": "K1QfV1PZoIo",
+      "title": "W2_L3_Section formula",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 15,
+      "videoId": "8BV_mBAh9NE",
+      "title": "W2_L6_Parallal and perpendicular lines",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 16,
+      "videoId": "v5-pfrC4hBc",
+      "title": "W2_L7_Representation of a Line",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 17,
+      "videoId": "UyiVGyAxBdE",
+      "title": "W2_L8_Equation of Line: Slope-Intercept Form",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 18,
+      "videoId": "Y50MNBvsKHY",
+      "title": "W2_L9_General Equation of a Line",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 19,
+      "videoId": "4JVBYF5UOyc",
+      "title": "W2_L10_Examples I",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 20,
+      "videoId": "p83BEPIW8M0",
+      "title": "W2_L11_Examples II",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 21,
+      "videoId": "LfMDsHw4ivk",
+      "title": "W2_L12_Distance of a Point from a Line",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 22,
+      "videoId": "X1naj7rDn8E",
+      "title": "W3_L1_Quadratic functions and its basic",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 23,
+      "videoId": "VLZ0SFxlNSw",
+      "title": "W3_L2_Examples of quadratic function",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 24,
+      "videoId": "OvY1J06ioYg",
+      "title": "W3_L3_Quadratic equation and its root using graphical method.",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 25,
+      "videoId": "WLPMRyAn7xw",
+      "title": "W3_L4_Slope of line and parabola",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 26,
+      "videoId": "aWIgg59W23k",
+      "title": "W3_L5_Quadratic equations Solve by Factoring.",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 27,
+      "videoId": "pO3Wj1huotA",
+      "title": "W3_L6_Quadratic equations Solve by Completing the square",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 28,
+      "videoId": "dAVcu4OlfH4",
+      "title": "W3_L7_Quadratic formula",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 29,
+      "videoId": "Tf4xS1T3JWU",
+      "title": "W4_L1_Polynomials",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 30,
+      "videoId": "PISuCIFzeic",
+      "title": "W4_L2_The Degree of the Polynomial",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 31,
+      "videoId": "t1pYvc3NT1g",
+      "title": "W4_L3_Polynomials in One Variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 32,
+      "videoId": "TKYwa8qzYyI",
+      "title": "W4_L4_Multiplication of Polynomials",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 33,
+      "videoId": "awN3MVbCklQ",
+      "title": "W4_L5_Division of Polynomials - Part 1",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 34,
+      "videoId": "GpizNT05nMY",
+      "title": "W4_L6_Division of Polynomials - Part 2",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 35,
+      "videoId": "BqsCpto3es4",
+      "title": "W4_L7_Characterization of Graphs of Polynomial Functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 36,
+      "videoId": "mGS_hhmrKzQ",
+      "title": "W4_L8_Zeros of Polynomial Functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 37,
+      "videoId": "cAI6mbK3j2Y",
+      "title": "W4_L9_Example",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 38,
+      "videoId": "D2S8C9UcZRs",
+      "title": "W4_L10_Graphical Behavior of Polynomials at x-Intercepts",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 39,
+      "videoId": "eFmR1ZatEkY",
+      "title": "W4_L11_Example",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 40,
+      "videoId": "Wgfv5hB8GAc",
+      "title": "W4_L12_Graphing a Polynomial Function",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 41,
+      "videoId": "FyRIhfDCfGI",
+      "title": "W5_L7_Composite Functions: Domain",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 42,
+      "videoId": "J83L0d_BIEI",
+      "title": "W5_L4_Exponential Functions: Graphing",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 43,
+      "videoId": "S5W1dX4MSXU",
+      "title": "W5_L8_Inverse functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 44,
+      "videoId": "XsujFRGRJws",
+      "title": "W5_L5_Natural exponential Functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 45,
+      "videoId": "bZdO9AF6Gvk",
+      "title": "W5_L3_Exponential Functions: Definitions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 46,
+      "videoId": "gs885QNjVM0",
+      "title": "W5_L6_Composite Functions & Examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 47,
+      "videoId": "itQW5U4kFcI",
+      "title": "W5_L2_One-to-One Function: Examples & Theorems",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 48,
+      "videoId": "zSSlQQafy5Q",
+      "title": "W5_L1_One-to-One Function: Definition & Tests",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 49,
+      "videoId": "9DQ4rv7FEWg",
+      "title": "W6_L4_Logarithmic Functions: Properties - 1",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 50,
+      "videoId": "LTYu8kiOB48",
+      "title": "W6_L1_Logarithmic Functions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 51,
+      "videoId": "OoRv48xE0Bg",
+      "title": "W6_L6_Logarithmic Functions:Properties - 2",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 52,
+      "videoId": "cNo4oCyROu4",
+      "title": "W6_L2_Logarithmic Functions: Graphs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 53,
+      "videoId": "eKImPkTFlGA",
+      "title": "W6_L7_Logarithmic Equations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 54,
+      "videoId": "s0NnGjI9MgQ",
+      "title": "W6_L5_Logarithmic Functions: Applications",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 55,
+      "videoId": "ZbRgSskHnrw",
+      "title": "W6_L3_Solving Exponential Equations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 56,
+      "videoId": "mpSLT4RC2w0",
+      "title": "W7_L2_Functions of one variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 57,
+      "videoId": "RvYDBKo4Jto",
+      "title": "W8_L3_Computing derivatives and L'hopital's rule",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 58,
+      "videoId": "ULScSMf6Pio",
+      "title": "W8_L4_Tangent and linear approximation",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 59,
+      "videoId": "-1F-AT17tdw",
+      "title": "W9_L3_Computing areas",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 60,
+      "videoId": "4hNKLVcOZ1Y",
+      "title": "W9_L1_Critical points",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 61,
+      "videoId": "a3VrRr71co4",
+      "title": "W9_L6_Computing integrals and areas",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 62,
+      "videoId": "qzOYvb3eJzA",
+      "title": "W9_L2_Examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 63,
+      "videoId": "rkono1Mn6js",
+      "title": "W9_L5_Integrals as anti-derivatives",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 64,
+      "videoId": "yWyZinb9WjQ",
+      "title": "W9_L4_Riemann sums and the integral",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 65,
+      "videoId": "0-sYuyLaxd0",
+      "title": "W10_L2_Some general graph problems",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 66,
+      "videoId": "1zcVQIY4Cu4",
+      "title": "W10_L1_Introduction to Graphs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 67,
+      "videoId": "2PnDynEvbR0",
+      "title": "W10_L3_Representation of graphs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 68,
+      "videoId": "5L2yzs2rfFQ",
+      "title": "W10_L8_Complexity of BFS and DFS",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 69,
+      "videoId": "GUjMchRxsUA",
+      "title": "W10_L7_Applications of BFS and DFS-2",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 70,
+      "videoId": "Stxuz__LznQ",
+      "title": "W10_L5_Depth-first search",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 71,
+      "videoId": "arGT84ovfAM",
+      "title": "W10_L6_Applications of BFS and DFS-1",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 72,
+      "videoId": "cOpnx8M19S4",
+      "title": "W10_L9_Directed Acyclic Graphs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 73,
+      "videoId": "kmn6TiJHrRo",
+      "title": "W10_L4_Breadth-first search",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 74,
+      "videoId": "19RA0_sPn1E",
+      "title": "W11_L2_Transitive Closure",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 75,
+      "videoId": "2RFyEtGfHtc",
+      "title": "W11_L10_Minimum Cost Spanning Tress: Kruskal's Algorithm",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 76,
+      "videoId": "83X76Y7NqU4",
+      "title": "W11_L8_Minimum Cost Spanning Tress",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 77,
+      "videoId": "FoBw7MtTtxk",
+      "title": "W11_L4_Shortest Paths in Weighted Graphs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 78,
+      "videoId": "IYvUHJdEjqw",
+      "title": "W11_L5_Single Source Shortest Paths",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 79,
+      "videoId": "XkR61fXCxYA",
+      "title": "W11_L9_Minimum Cost Spanning Tress: Prim's Algorithm",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 80,
+      "videoId": "fl3JU6ONC5s",
+      "title": "W11_L1_Longest Paths in DAGs",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 81,
+      "videoId": "j32W7NDntj4",
+      "title": "W11_L6_Single Source Shortest Paths with Negative Weights",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 82,
+      "videoId": "pJLBwO6sm6o",
+      "title": "W11_L3_Matrix Multiplication",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 83,
+      "videoId": "uNxcEdJ-6wc",
+      "title": "W11_L7_All-Pairs Shortest Paths",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 84,
+      "videoId": "LEUEn3iCmQc",
+      "title": "W7_L4_Limit of a sequence",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 85,
+      "videoId": "REVD3Nw56C8",
+      "title": "W7_L3_Graphs and tangents of functions of one variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 86,
+      "videoId": "UerNrxbW9ss",
+      "title": "W7_L5_Limits for functions of one variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 87,
+      "videoId": "_o3siJWYWdY",
+      "title": "W7_L1_Function",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 88,
+      "videoId": "v-p7B9hyMLc",
+      "title": "W8_L1_Limit and continuity",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 89,
+      "videoId": "JMY816IQacI",
+      "title": "W8_L2_Differentiability and the derivative",
+      "duration": "N/A"
+    }
+  ]
+}

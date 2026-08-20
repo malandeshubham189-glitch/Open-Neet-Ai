@@ -1,0 +1,428 @@
+{
+  "playlistId": "PLZ2ps__7DhBbhK4gNFIWwx9cct193V0_b",
+  "playlistTitle": "Statistics for Data Science - Hindi Course",
+  "totalDiscovered": 70,
+  "totalImported": 70,
+  "videos": [
+    {
+      "playlistOrder": 1,
+      "videoId": "nHe1nYmtAy0",
+      "title": "W1_L1_Introduction and types of Data - Basic definitions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 2,
+      "videoId": "5e5nHjXJtUg",
+      "title": "W1_L2_Introduction and types of Data - Understanding data",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 3,
+      "videoId": "JiAaOUCVY-I",
+      "title": "W1_L3_Introduction and types of Data - Classification of data",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 4,
+      "videoId": "Cwq9xYC8d6g",
+      "title": "W1_L4_Introduction and types of Data - Scales of measurement",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 5,
+      "videoId": "ljaAgjT0wuY",
+      "title": "W2_L1_Describing Categorical Data - Frequency distributions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 6,
+      "videoId": "tYzmNXeVhvo",
+      "title": "W2_L2_Describing Categorical Data - Charts of categorical data",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 7,
+      "videoId": "gVyhfRCvV3s",
+      "title": "W2_L3_Describing Categorical Data - Best practices while graphing data - Part 1",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 8,
+      "videoId": "ZrwpYmZ1Wi0",
+      "title": "W2_L4_Describing Categorical Data - Best practices while graphing data - Part 2",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 9,
+      "videoId": "C-A8tm4z0dY",
+      "title": "W2_L5_Describing Categorical Data - Mode and Median",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 10,
+      "videoId": "nGpwm9Ev5RQ",
+      "title": "W3_L1_Describing Numerical Data - Frequency Tables for numerical data",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 11,
+      "videoId": "17PjWUHWaqs",
+      "title": "W3_L2_Describing Numerical Data - Mean",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 12,
+      "videoId": "aiU6QmOxu_Q",
+      "title": "W3_L3_Describing Numerical Data - Median and Mode",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 13,
+      "videoId": "1RGTqZLQhWU",
+      "title": "W3_L4_Describing Numerical Data - Measures of dispersion- Range, variance and standard deviation",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 14,
+      "videoId": "lD8UIvaKfOY",
+      "title": "W3_L5_Describing Numerical Data - Percentiles, Quartiles, and Interquartile range",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 15,
+      "videoId": "tEnnRFYi_Gw",
+      "title": "W4_L1_Association between two variables - Review of course",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 16,
+      "videoId": "Q278poQD_x0",
+      "title": "W4_L2_Association between two categorical variables - Introduction",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 17,
+      "videoId": "7JbEb67GuBI",
+      "title": "W4_L3_Association between two categorical variables - Relative frequencies",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 18,
+      "videoId": "wMT9uiUbTT8",
+      "title": "W4_L4_Association between two numerical variables - Scatterplot",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 19,
+      "videoId": "YvKF_tSiT5Q",
+      "title": "W4_L5_Association between two numerical variables - Describing association",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 20,
+      "videoId": "TxsIi8uLd7A",
+      "title": "W4_L6_Association between two numerical variables - Covariance",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 21,
+      "videoId": "8yFAbKEgg34",
+      "title": "W4_L7_Association between two numerical variables - Correlation",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 22,
+      "videoId": "yLqNWxd6pm8",
+      "title": "W4_L8_Association between two numerical variables - Fitting a line",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 23,
+      "videoId": "5uLNgurbmW8",
+      "title": "W4_L9_Association between categorical and numerical variables",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 24,
+      "videoId": "TeA3VV03li4",
+      "title": "W5_L1_Permutations and Combinations - Basic Principles of counting",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 25,
+      "videoId": "H7nYfmADo_w",
+      "title": "W5_L2_Permutations and Combinations - Factorials",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 26,
+      "videoId": "ftfjRB2kK2M",
+      "title": "W5_L3_Permutations and Combinations - Permutations: Distinct objects",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 27,
+      "videoId": "IOJTvHjF61g",
+      "title": "W5_L4_Permutations and Combinations - Permutations: Objects not distinct and Circular permutations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 28,
+      "videoId": "Jb_13IrCtCI",
+      "title": "W6_L1_Permutation and Combinations - Combinations",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 29,
+      "videoId": "cI28fhKp-2g",
+      "title": "W6_L2_Permutation and Combinations - Applications",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 30,
+      "videoId": "eTzTxjzztWw",
+      "title": "W7_L1_Probability - Basic Definitions",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 31,
+      "videoId": "AsW_n-ofMgg",
+      "title": "W7_L2_Probability - Events",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 32,
+      "videoId": "HdswA7RUKds",
+      "title": "W7_L3_Probability - Venn diagrams",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 33,
+      "videoId": "ypZ7WpCCn9w",
+      "title": "W7_L4_Probability - Properties of probability",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 34,
+      "videoId": "WrthczOlnA4",
+      "title": "W7_L5_Probability - Applications",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 35,
+      "videoId": "K460XSM8KMk",
+      "title": "W7_L6_Probability - Equally likely outcomes",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 36,
+      "videoId": "U1INCqfPcQI",
+      "title": "W8_L1_Conditional Probability - Contingency tables",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 37,
+      "videoId": "iaOL0po3LFA",
+      "title": "W8_L2_Conditional Probability - Conditional probability formula",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 38,
+      "videoId": "HYjvr960Vww",
+      "title": "W8_L3_Conditional Probability - Multiplication rule",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 39,
+      "videoId": "e4hIjPG5md0",
+      "title": "W8_L4_Conditional Probability - Independent events",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 40,
+      "videoId": "s3H1MZG7M1s",
+      "title": "W8_L5_Conditional Probability - Independent events: examples",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 41,
+      "videoId": "G3Mh4rn-Qls",
+      "title": "W8_L6_Conditional Probability - Independent events: properties",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 42,
+      "videoId": "MNxRz31iuoM",
+      "title": "W8_L7_Conditional Probability - Bayes' rule",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 43,
+      "videoId": "3PA8ke4OFGQ",
+      "title": "W9_L1_Random Variables - Introduction",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 44,
+      "videoId": "7mzQJBfLvUQ",
+      "title": "W9_L2_Random variables - Application",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 45,
+      "videoId": "orPPawqDsr4",
+      "title": "W9_L3_Random variables - Discrete and continuous random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 46,
+      "videoId": "aJEN0_yyy94",
+      "title": "W9_L4_Discrete random variables - Probability mass function properties",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 47,
+      "videoId": "_okyiaGmeQY",
+      "title": "W9_L5_Discrete random variables - Graph of probability mass function",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 48,
+      "videoId": "zZaSsi4Zewc",
+      "title": "W9_L6_Discrete random variables - Cumulative distribution function",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 49,
+      "videoId": "ThGc3_D1EZg",
+      "title": "W10_L1_Discrete random variable - Application",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 50,
+      "videoId": "wpyRKlSRtBs",
+      "title": "W10_L2_Expectation of a random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 51,
+      "videoId": "vZz23oTrGts",
+      "title": "W10_L3_Expectation of a random variable - Properties of expectation",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 52,
+      "videoId": "xC5JkPEw4hc",
+      "title": "W10_L4_Variance of a random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 53,
+      "videoId": "Jx1a6lGZUPc",
+      "title": "W10_L5_Variance of a random variable - Properties of variance",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 54,
+      "videoId": "EnRJ3zR7eOw",
+      "title": "W10_L6_Standard deviation of a random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 55,
+      "videoId": "GuqwRrMFBPo",
+      "title": "W11_L1_Binomial distribution - Bernoulli distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 56,
+      "videoId": "Z1tNpzTzwD0",
+      "title": "W11_L2:Binomial distribution - IID Bernoulli trials",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 57,
+      "videoId": "n1yQsSbfWWE",
+      "title": "W11_L3_Binomial distribution - Distribution of Binomial random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 58,
+      "videoId": "PuGwhJ6S82c",
+      "title": "W11_L4_Binomial distribution - Modelling situations as Binomial distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 59,
+      "videoId": "XK2GIMpPXZE",
+      "title": "W11_L5:Binomial distribution - Expectation and variance of Binomial random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 60,
+      "videoId": "ntq9VQMj2vM",
+      "title": "W11_L6 : Hypergeometric distribution - Distribution of Hypergeometric random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 61,
+      "videoId": "O7DTy-38oeY",
+      "title": "W11_L7 : Hypergeometric distribution - Expectation and variance of Hypergeometric random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 62,
+      "videoId": "L2s0osuyGps",
+      "title": "W11_L8_Poisson distribution - Distribution of Poisson random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 63,
+      "videoId": "MDshO6KUeGI",
+      "title": "W11_L9_Poisson distribution - Expectation and variance of Poisson random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 64,
+      "videoId": "o_YiPkrPf3c",
+      "title": "W12_L1_Continuous random variable - Uniform distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 65,
+      "videoId": "97ahpYS6EdI",
+      "title": "W12_L2_Continuous random variable - Uniform distribution: applications",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 66,
+      "videoId": "3r30q3_oSto",
+      "title": "W12_L7_Standardizing a normal random variable",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 67,
+      "videoId": "71j4_CT_AZo",
+      "title": "W12_L6_Standard Normal Distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 68,
+      "videoId": "wC_f1_Jx2DU",
+      "title": "W12_L5_Normal Distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 69,
+      "videoId": "aBCIYyM3o9g",
+      "title": "W12_L3_Continuous random variable - Non uniform and triangular distribution",
+      "duration": "N/A"
+    },
+    {
+      "playlistOrder": 70,
+      "videoId": "TLzSL6UPA0s",
+      "title": "W12_L4_Continuous random variable - Exponential distribution",
+      "duration": "N/A"
+    }
+  ]
+}

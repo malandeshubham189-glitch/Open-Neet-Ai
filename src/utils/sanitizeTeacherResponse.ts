@@ -64,9 +64,13 @@ export function sanitizeTeacherResponse(rawText: string): string {
   text = text.replace(/\\(implies|quad|qquad|in|notin|subset|cap|cup|cdot|vec|frac|text|left|right|boxed|begin|end)\b/g, " ");
   text = text.replace(/\\([a-zA-Z]+)/g, "$1");
 
-  // 6. Support V8 Unicode/ASCII diagrams - preserve clean box & flow diagrams
-  text = text.replace(/```[a-z]*\n([\s\S]*?)\n```/gi, (match, inner) => {
-    // If it's a clean ASCII/Unicode diagram with box drawing or flow arrows, render as plain text block
+  // 6. Support Diagram and Code Blocks - preserve json/diagram blocks for DiagramParser
+  text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)\n```/gi, (match, lang, inner) => {
+    // If it's a diagram specification or JSON object, preserve it cleanly
+    if (inner.includes('"nodes"') || inner.includes('"title"') || inner.includes('"diagramType"') || lang === 'diagram' || lang === 'json') {
+      return `\n\n\`\`\`diagram\n${inner.trim()}\n\`\`\`\n\n`;
+    }
+    // If it's a clean box drawing or flow arrows, render as plain text block
     if (
       inner.includes("┌") ||
       inner.includes("└") ||

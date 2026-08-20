@@ -1,5 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { CourseSwitcher } from './navigation/CourseSwitcher';
 import {
   Atom,
   FlaskConical,
@@ -27,19 +29,29 @@ import {
   Building2,
   Calculator,
   BarChart3,
-  GraduationCap
+  GraduationCap,
+  ListVideo,
+  UserCheck,
+  LogIn
 } from 'lucide-react';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onOpenAuthModal?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onOpenAuthModal }) => {
+  const { user } = useAuth();
   const {
     currentView,
     setCurrentView,
     setSelectedSubjectFilter,
     distractionFreeMode,
     activeCourse,
-    setActiveCourse,
+    canonicalActiveCourse,
+    switchCourse,
     openNursingTopicDetail,
-    openIITMLecture
+    openIITMLecture,
+    openIITMWeekLesson
   } = useApp();
 
   if (distractionFreeMode) {
@@ -230,6 +242,13 @@ export const Sidebar: React.FC = () => {
       action: () => setCurrentView('iitm-dashboard')
     },
     {
+      id: 'iitm-math-playlist',
+      label: 'Math 1 Playlist (Weeks 1-4)',
+      icon: ListVideo,
+      badge: '30 LECTURES',
+      action: () => openIITMWeekLesson('week_1')
+    },
+    {
       id: 'iitm-math-1',
       label: 'Mathematics 1 (OneShot)',
       icon: Calculator,
@@ -253,9 +272,9 @@ export const Sidebar: React.FC = () => {
   ];
 
   const activeItems =
-    activeCourse === 'iitm'
+    canonicalActiveCourse === 'iitm_bs'
       ? iitmItems
-      : activeCourse === 'nursing'
+      : canonicalActiveCourse === 'nursing'
       ? nursingItems
       : neetItems;
 
@@ -264,35 +283,28 @@ export const Sidebar: React.FC = () => {
       <div className="flex h-full flex-col justify-between">
         <div className="space-y-1">
           {/* Active Course Indicator Header */}
-          <div className="mb-3 px-3 py-2 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div
-                className={`h-2.5 w-2.5 rounded-full ${
-                  activeCourse === 'iitm'
-                    ? 'bg-indigo-600'
-                    : activeCourse === 'nursing'
-                    ? 'bg-emerald-500'
-                    : 'bg-blue-600'
+          <div className="mb-3 p-1.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between px-2 py-1 mb-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                Academic Track
+              </span>
+              <span
+                className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                  canonicalActiveCourse === 'iitm_bs'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : canonicalActiveCourse === 'nursing'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-blue-100 text-blue-700'
                 }`}
-              />
-              <span className="text-[11px] font-bold text-slate-700">
-                {activeCourse === 'iitm'
-                  ? 'IIT Madras BS Degree'
-                  : activeCourse === 'nursing'
-                  ? 'B.Sc Nursing (MUHS)'
-                  : 'NEET 2027 Prep'}
+              >
+                Active
               </span>
             </div>
-            <button
-              onClick={() => {
-                if (activeCourse === 'nursing') setActiveCourse('iitm');
-                else if (activeCourse === 'iitm') setActiveCourse('neet');
-                else setActiveCourse('nursing');
-              }}
-              className="text-[10px] font-bold text-indigo-700 hover:underline cursor-pointer"
-            >
-              Switch
-            </button>
+            <CourseSwitcher
+              activeCourse={activeCourse}
+              onCourseChange={(course) => switchCourse(course)}
+              compact={true}
+            />
           </div>
 
           {activeItems.map((item) => {
@@ -300,10 +312,10 @@ export const Sidebar: React.FC = () => {
             const isActive =
               currentView === item.id ||
               (item.id === 'test' && currentView === 'test-center') ||
-              (activeCourse === 'nursing' &&
+              (canonicalActiveCourse === 'nursing' &&
                 item.id === 'nursing-dashboard' &&
                 currentView === 'nursing-dashboard') ||
-              (activeCourse === 'iitm' &&
+              (canonicalActiveCourse === 'iitm_bs' &&
                 item.id === 'iitm-dashboard' &&
                 currentView === 'iitm-dashboard');
 
@@ -313,9 +325,9 @@ export const Sidebar: React.FC = () => {
                 onClick={item.action}
                 className={`flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   isActive
-                    ? activeCourse === 'iitm'
+                    ? canonicalActiveCourse === 'iitm_bs'
                       ? 'bg-indigo-50 text-indigo-900 border border-indigo-200/80 shadow-2xs'
-                      : activeCourse === 'nursing'
+                      : canonicalActiveCourse === 'nursing'
                       ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-2xs'
                       : 'bg-blue-50 text-blue-700 border border-blue-200/80'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -325,9 +337,9 @@ export const Sidebar: React.FC = () => {
                   <Icon
                     className={`h-4 w-4 shrink-0 ${
                       isActive
-                        ? activeCourse === 'iitm'
+                        ? canonicalActiveCourse === 'iitm_bs'
                           ? 'text-indigo-600'
-                          : activeCourse === 'nursing'
+                          : canonicalActiveCourse === 'nursing'
                           ? 'text-emerald-700'
                           : 'text-blue-600'
                         : 'text-slate-400'
@@ -338,9 +350,9 @@ export const Sidebar: React.FC = () => {
                 {item.badge && (
                   <span
                     className={`shrink-0 rounded-full px-1.5 py-0.2 text-[9px] font-black uppercase ${
-                      activeCourse === 'iitm'
+                      canonicalActiveCourse === 'iitm_bs'
                         ? 'bg-indigo-100 text-indigo-900'
-                        : activeCourse === 'nursing'
+                        : canonicalActiveCourse === 'nursing'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-blue-100 text-blue-800'
                     }`}
@@ -354,19 +366,19 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Course specific footers */}
-        {activeCourse === 'iitm' && (
+        {canonicalActiveCourse === 'iitm_bs' && (
           <div className="mt-4 rounded-2xl bg-indigo-50/60 p-3 border border-indigo-100 text-[10px] text-indigo-950 space-y-1">
             <div className="flex items-center gap-1 font-bold text-indigo-900">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>IITM BS Verified Lectures</span>
             </div>
             <p className="text-indigo-950/80">
-              Math 1 & Stats 1 OneShots with Qualifier & Quiz 1 practice.
+              Math 1 & Stats 1 Zero-Skip Playlists with Qualifier Practice.
             </p>
           </div>
         )}
 
-        {activeCourse === 'nursing' && (
+        {canonicalActiveCourse === 'nursing' && (
           <div className="mt-4 rounded-2xl bg-emerald-50/60 p-3 border border-emerald-100 text-[10px] text-emerald-900 space-y-1">
             <div className="flex items-center gap-1 font-bold text-emerald-800">
               <ShieldCheck className="h-3.5 w-3.5" />
@@ -375,6 +387,43 @@ export const Sidebar: React.FC = () => {
             <p className="text-emerald-950/80">
               Aligned with 2nd, 3rd & Final Year INC guidelines.
             </p>
+          </div>
+        )}
+
+        {canonicalActiveCourse === 'neet' && (
+          <div className="mt-4 rounded-2xl bg-blue-50/60 p-3 border border-blue-100 text-[10px] text-blue-950 space-y-1">
+            <div className="flex items-center gap-1 font-bold text-blue-900">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>NEET 2027 Syllabus Focus</span>
+            </div>
+            <p className="text-blue-950/80">
+              Target 650+ Score Mode • Physics, Chemistry & Biology.
+            </p>
+          </div>
+        )}
+
+        {/* Account / Sign-in Status Card */}
+        {(!user || user.isGuest) && onOpenAuthModal && (
+          <div className="mt-4 p-3 rounded-2xl bg-linear-to-br from-blue-50 to-indigo-50/70 border border-blue-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-blue-900 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-blue-600" />
+                <span>Save Your Progress</span>
+              </span>
+              <span className="text-[9px] font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                Guest
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-600 leading-tight">
+              Create an account to sync tests, notes & daily streaks.
+            </p>
+            <button
+              onClick={onOpenAuthModal}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 p-2 text-xs font-bold text-white shadow-xs transition-all cursor-pointer active:scale-98"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              <span>Sign In / Sign Up</span>
+            </button>
           </div>
         )}
       </div>

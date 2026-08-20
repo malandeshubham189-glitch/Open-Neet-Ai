@@ -57,7 +57,7 @@ export const AIMentorArchitectureView: React.FC = () => {
       const data = await res.json();
       if (data.answer) {
         setAiAnswer(data.answer);
-        setModelName(data.modelUsed || 'gemini-2.5-flash');
+        setModelName(data.modelUsed || 'gemini-3.7-flash');
       }
     } catch (err) {
       setAiAnswer('### ⚠️ Connection Error\nCould not connect to AI Brain backend. Please check server status.');

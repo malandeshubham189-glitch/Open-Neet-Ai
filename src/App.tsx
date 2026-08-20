@@ -29,6 +29,7 @@ import { NursingDashboard } from './components/nursing/NursingDashboard';
 import { NursingTopicDetail } from './components/nursing/NursingTopicDetail';
 import { IITMDashboard } from './components/iitm/IITMDashboard';
 import { IITMLectureRoom } from './components/iitm/IITMLectureRoom';
+import { IITMWeekRoom } from './components/iitm/IITMWeekRoom';
 import { getNursingTopicById, getAllNursingTopics } from './data/nursingCurriculumData';
 import { SearchModal } from './components/SearchModal';
 import { AuthModal } from './components/AuthModal';
@@ -59,10 +60,15 @@ const MainAppContent: React.FC = () => {
     setCurrentView,
     distractionFreeMode,
     activeCourse,
+    canonicalActiveCourse,
+    switchCourse,
     selectedNursingTopicId,
     openNursingTopicDetail,
     selectedIITMSubjectId,
-    openIITMLecture
+    openIITMLecture,
+    selectedIITMWeekId,
+    selectedIITMLessonId,
+    openIITMWeekLesson
   } = useApp();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -80,6 +86,7 @@ const MainAppContent: React.FC = () => {
         return (
           <IITMDashboard
             onOpenSubject={(subId) => openIITMLecture(subId)}
+            onOpenWeekLesson={(weekId, lessonId, subjectId) => openIITMWeekLesson(weekId, lessonId, subjectId)}
           />
         );
       case 'iitm-lecture-room':
@@ -87,6 +94,15 @@ const MainAppContent: React.FC = () => {
           <IITMLectureRoom
             subjectId={selectedIITMSubjectId}
             onBack={() => setCurrentView('iitm-dashboard')}
+          />
+        );
+      case 'iitm-week-room':
+        return (
+          <IITMWeekRoom
+            initialSubjectId={selectedIITMSubjectId}
+            initialWeekId={selectedIITMWeekId}
+            initialLessonId={selectedIITMLessonId}
+            onBackToDashboard={() => setCurrentView('iitm-dashboard')}
           />
         );
       case 'nursing-dashboard':
@@ -134,14 +150,15 @@ const MainAppContent: React.FC = () => {
       case 'ncert':
         return <NCERTReaderView />;
       default:
-        if (activeCourse === 'iitm') {
+        if (canonicalActiveCourse === 'iitm_bs') {
           return (
             <IITMDashboard
               onOpenSubject={(subId) => openIITMLecture(subId)}
+              onOpenWeekLesson={(weekId, lessonId) => openIITMWeekLesson(weekId, lessonId)}
             />
           );
         }
-        return activeCourse === 'nursing' ? (
+        return canonicalActiveCourse === 'nursing' ? (
           <NursingDashboard
             onSelectTopic={(topicId) => openNursingTopicDetail(topicId)}
           />
@@ -163,7 +180,9 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Container */}
       <div className="flex flex-1">
-        {!distractionFreeMode && currentView !== 'landing' && <Sidebar />}
+        {!distractionFreeMode && currentView !== 'landing' && (
+          <Sidebar onOpenAuthModal={() => setIsAuthModalOpen(true)} />
+        )}
 
         <main className="flex-1 w-full pb-24 md:pb-12 overflow-x-hidden">
           {renderActiveView()}
@@ -173,7 +192,7 @@ const MainAppContent: React.FC = () => {
       {/* Mobile Bottom Navigation Bar */}
       {!distractionFreeMode && currentView !== 'landing' && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#E5E7EB] bg-white/95 backdrop-blur-md md:hidden shadow-lg">
-          {activeCourse === 'iitm' ? (
+          {canonicalActiveCourse === 'iitm_bs' ? (
             <div className="grid grid-cols-4 h-16">
               {/* 1. Hub */}
               <button
@@ -227,7 +246,7 @@ const MainAppContent: React.FC = () => {
                 <span className="text-[9px]">Qualifier</span>
               </button>
             </div>
-          ) : activeCourse === 'nursing' ? (
+          ) : canonicalActiveCourse === 'nursing' ? (
             <div className="grid grid-cols-5 h-16">
               {/* 1. Hub */}
               <button

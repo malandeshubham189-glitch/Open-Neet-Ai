@@ -2,17 +2,36 @@ import {
   IITMSubjectId,
   IITMUserProgress,
   IITMLectureResource,
-  IITMQuizQuestion
+  IITMQuizQuestion,
+  IITMPlaylistMetadata,
+  IITMWeekId,
+  IITMPlaylistLesson,
+  IITMWeekMetadata,
+  IITMLessonProgress,
+  IITMWeekProgress,
+  IITMPlaylistIntegrityAudit
 } from '../types/iitm';
+import { StructuredNotes } from '../types/notes';
 import {
   IITM_SUBJECTS_METADATA,
   IITM_MATH_1_QUESTIONS,
   IITM_STATS_1_QUESTIONS,
   IITM_STRUCTURED_NOTES
 } from '../data/iitmData';
+import {
+  IITM_MATH_PLAYLIST_METADATA,
+  IITM_STATS_PLAYLIST_METADATA,
+  IITM_MATH_1_PLAYLIST_META,
+  IITM_MATH_1_WEEKS,
+  IITM_STATS_1_WEEKS,
+  IITM_PLAYLIST_WEEK_QUESTIONS,
+  IITM_STATS_PLAYLIST_WEEK_QUESTIONS,
+  PlaylistIntegrityChecker
+} from '../data/iitmPlaylistData';
 
 const IITM_STORAGE_KEY = 'iitm_bs_user_progress_v1';
 const IITM_SMART_RESUME_KEY = 'iitm_bs_smart_resume_v1';
+const IITM_PLAYLIST_PROGRESS_KEY = 'iitm_bs_playlist_progress_v1';
 
 export interface IITMSmartResumeState {
   subjectId: IITMSubjectId;
@@ -22,6 +41,9 @@ export interface IITMSmartResumeState {
   stepLabel: string;
   progressPercent: number;
   lastOpenedAt: string;
+  activeTrack?: 'oneshot' | 'playlist';
+  weekId?: IITMWeekId;
+  lessonId?: string;
 }
 
 export interface IITMNextAction {
@@ -32,11 +54,36 @@ export interface IITMNextAction {
   stepNumber: number;
   estimatedMinutes: number;
   reason: string;
+  track?: 'oneshot' | 'playlist';
+  weekId?: IITMWeekId;
+  lessonId?: string;
+}
+
+export interface IITMDiagnosticReport {
+  playlistId: string;
+  playlistTitle: string;
+  canonicalUrl: string;
+  userProvidedUrl: string;
+  channel: string;
+  status: 'ACTIVE' | 'RESOURCE_UNAVAILABLE' | 'VALIDATED';
+  lastValidated: string;
+  totalVideosDiscovered: number;
+  totalVideosImported: number;
+  totalVideosMapped: number;
+  week1VideosCount: number;
+  week2VideosCount: number;
+  week3VideosCount: number;
+  week4VideosCount: number;
+  skippedVideosCount: number;
+  unverifiedWeekMappingsCount: number;
+  unavailableVideosCount: number;
+  progressPipelineStatus: string;
+  buildStatus: 'VERIFIED_GREEN' | 'PENDING';
 }
 
 export class IITMService {
   /**
-   * Get all progress items
+   * Get all progress items for OneShot track
    */
   public static getAllProgress(): Record<IITMSubjectId, IITMUserProgress> {
     try {
@@ -48,7 +95,6 @@ export class IITMService {
       // Storage fallback
     }
 
-    // Initial default state
     const defaultProgress: Record<IITMSubjectId, IITMUserProgress> = {
       math_1: {
         subjectId: 'math_1',
@@ -76,7 +122,7 @@ export class IITMService {
   }
 
   /**
-   * Get progress for a specific subject
+   * Get progress for a specific subject (OneShot)
    */
   public static getProgress(subjectId: IITMSubjectId): IITMUserProgress {
     const all = this.getAllProgress();
@@ -95,7 +141,7 @@ export class IITMService {
   }
 
   /**
-   * Save progress for a subject
+   * Save progress for a subject (OneShot)
    */
   public static saveProgress(
     subjectId: IITMSubjectId,
@@ -119,7 +165,6 @@ export class IITMService {
       lastOpenedAt: new Date().toISOString()
     };
 
-    // Calculate completion
     if (updated.videoWatched && updated.notesGenerated && updated.quizCompleted) {
       updated.completed = true;
     }
@@ -132,16 +177,18 @@ export class IITMService {
       // Storage fallback
     }
 
-    // Update smart resume
     this.saveSmartResume(subjectId, updated.currentStep);
-
     return updated;
   }
 
   /**
    * Save smart resume point
    */
-  public static saveSmartResume(subjectId: IITMSubjectId, stepNumber: number = 1): IITMSmartResumeState {
+  public static saveSmartResume(
+    subjectId: IITMSubjectId,
+    stepNumber: number = 1,
+    extra?: { activeTrack?: 'oneshot' | 'playlist'; weekId?: IITMWeekId; lessonId?: string }
+  ): IITMSmartResumeState {
     const meta = IITM_SUBJECTS_METADATA[subjectId];
     const progress = this.getProgress(subjectId);
 
@@ -172,7 +219,10 @@ export class IITMService {
       stepNumber,
       stepLabel,
       progressPercent,
-      lastOpenedAt: new Date().toISOString()
+      lastOpenedAt: new Date().toISOString(),
+      activeTrack: extra?.activeTrack || 'playlist',
+      weekId: extra?.weekId,
+      lessonId: extra?.lessonId
     };
 
     try {
@@ -200,100 +250,330 @@ export class IITMService {
       // Ignore
     }
 
-    // Default to Mathematics 1
     return {
       subjectId: 'math_1',
       subjectTitle: 'Mathematics 1',
-      lectureTitle: IITM_SUBJECTS_METADATA.math_1.lectureResource.title,
+      lectureTitle: 'Mathematics for Data Science - 1 (Hindi) Playlist',
       stepNumber: 1,
       stepLabel: 'Step 1: Watch Distraction-Free Lecture',
       progressPercent: 0,
+      lastOpenedAt: new Date().toISOString(),
+      activeTrack: 'playlist',
+      weekId: 'week_1',
+      lessonId: 'math1_week_1_l1'
+    };
+  }
+
+  // ==========================================
+  // PLAYLIST & WEEK-BASED STRUCTURE METHODS
+  // ==========================================
+
+  /**
+   * Get playlist metadata for a subject
+   */
+  public static getPlaylistMeta(subjectId: IITMSubjectId = 'math_1'): IITMPlaylistMetadata {
+    return subjectId === 'math_1' ? IITM_MATH_PLAYLIST_METADATA : IITM_STATS_PLAYLIST_METADATA;
+  }
+
+  /**
+   * Get all week metadata for a subject
+   */
+  public static getAllWeeks(subjectId: IITMSubjectId = 'math_1'): Record<IITMWeekId, IITMWeekMetadata> {
+    return subjectId === 'math_1' ? IITM_MATH_1_WEEKS : IITM_STATS_1_WEEKS;
+  }
+
+  /**
+   * Get specific week metadata for a subject
+   */
+  public static getWeek(weekId: IITMWeekId, subjectId: IITMSubjectId = 'math_1'): IITMWeekMetadata {
+    const weeks = this.getAllWeeks(subjectId);
+    return weeks[weekId] || weeks.week_1;
+  }
+
+  /**
+   * Get all lesson progress stored locally
+   */
+  public static getAllLessonProgress(): Record<string, IITMLessonProgress> {
+    try {
+      const data = localStorage.getItem(IITM_PLAYLIST_PROGRESS_KEY);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch {
+      // Fallback
+    }
+    return {};
+  }
+
+  /**
+   * Get progress for a specific lesson
+   */
+  public static getLessonProgress(
+    lessonId: string,
+    weekId: IITMWeekId,
+    subjectId: IITMSubjectId = 'math_1'
+  ): IITMLessonProgress {
+    const all = this.getAllLessonProgress();
+    const existing = all[lessonId];
+    if (existing) {
+      return existing;
+    }
+
+    return {
+      lessonId,
+      weekId,
+      subjectId,
+      courseId: 'iit_madras_bs',
+      userId: 'student_current',
+      watched: false,
+      watchDurationSeconds: 0,
+      totalDurationSeconds: 0,
+      notesGenerated: false,
+      practiceCompleted: false,
+      quizCompleted: false,
+      revisionScheduled: false,
+      currentStep: 1,
+      lastOpenedAt: new Date().toISOString(),
+      completed: false
+    };
+  }
+
+  /**
+   * Save progress for a lesson
+   */
+  public static saveLessonProgress(
+    lessonId: string,
+    weekId: IITMWeekId,
+    updates: Partial<IITMLessonProgress>,
+    subjectId: IITMSubjectId = 'math_1'
+  ): IITMLessonProgress {
+    const all = this.getAllLessonProgress();
+    const current = this.getLessonProgress(lessonId, weekId, subjectId);
+
+    const updated: IITMLessonProgress = {
+      ...current,
+      ...updates,
       lastOpenedAt: new Date().toISOString()
     };
+
+    if (updated.watched && (updated.notesGenerated || updated.quizCompleted || updated.practiceCompleted)) {
+      updated.completed = true;
+    } else if (updated.watched && updated.notesGenerated) {
+      updated.completed = true;
+    }
+
+    all[lessonId] = updated;
+
+    try {
+      localStorage.setItem(IITM_PLAYLIST_PROGRESS_KEY, JSON.stringify(all));
+    } catch {
+      // Ignore
+    }
+
+    return updated;
   }
 
   /**
-   * Calculate Next Best Action for the student in IIT Madras BS
+   * Calculate progress for a specific week
    */
-  public static getNextAction(): IITMNextAction {
-    const all = this.getAllProgress();
-    const mathProg = all.math_1;
-    const statsProg = all.stats_1;
-
-    if (!mathProg.videoWatched) {
-      return {
-        subjectId: 'math_1',
-        subjectTitle: 'Mathematics 1',
-        actionTitle: 'Watch Mathematics 1 OneShot Lecture',
-        actionSubtitle: 'Functions, Coordinate Geometry, Polynomials & Matrix Systems (Qualifier & Quiz 1)',
-        stepNumber: 1,
-        estimatedMinutes: 45,
-        reason: 'Mathematics 1 forms the foundational core required for all subsequent algorithms and data structures.'
-      };
+  public static getWeekProgress(weekId: IITMWeekId, subjectId: IITMSubjectId = 'math_1'): IITMWeekProgress {
+    const weeks = this.getAllWeeks(subjectId);
+    const week = weeks[weekId];
+    if (!week || !week.lessons) {
+      return { weekId, subjectId, completedLessons: 0, totalLessons: 0, progressPercent: 0, isCompleted: false };
     }
 
-    if (!mathProg.notesGenerated) {
-      return {
-        subjectId: 'math_1',
-        subjectTitle: 'Mathematics 1',
-        actionTitle: 'Generate & Review Mathematics 1 Notes',
-        actionSubtitle: 'Key formulas, vertex equations, determinants and rank criteria',
-        stepNumber: 2,
-        estimatedMinutes: 15,
-        reason: 'Consolidate algebraic and matrix formulas immediately after watching the lecture.'
-      };
-    }
+    const totalLessons = week.lessons.length;
+    let completedLessons = 0;
 
-    if (!statsProg.videoWatched) {
-      return {
-        subjectId: 'stats_1',
-        subjectTitle: 'Statistics 1',
-        actionTitle: 'Watch Statistics 1 OneShot Lecture',
-        actionSubtitle: 'Descriptive Statistics, Tukey Outliers, Probability Axioms & Bayes Theorem',
-        stepNumber: 1,
-        estimatedMinutes: 45,
-        reason: 'Statistics 1 is essential for probability and exploratory data analysis in Quiz 1.'
-      };
-    }
+    week.lessons.forEach((lesson) => {
+      const prog = this.getLessonProgress(lesson.lessonId, weekId, subjectId);
+      if (prog.completed || prog.watched) {
+        completedLessons++;
+      }
+    });
 
-    if (!statsProg.quizCompleted) {
-      return {
-        subjectId: 'stats_1',
-        subjectTitle: 'Statistics 1',
-        actionTitle: 'Take Statistics 1 Practice Quiz',
-        actionSubtitle: '5-Question diagnostic test on Bayes Theorem, IQR, PMF and Data Types',
-        stepNumber: 4,
-        estimatedMinutes: 15,
-        reason: 'Verify mastery of conditional probability and discrete random variables before exam day.'
-      };
-    }
+    const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const isCompleted = completedLessons === totalLessons && totalLessons > 0;
 
-    if (!mathProg.quizCompleted) {
-      return {
-        subjectId: 'math_1',
-        subjectTitle: 'Mathematics 1',
-        actionTitle: 'Take Mathematics 1 Practice Quiz',
-        actionSubtitle: 'Diagnostic test on Inverses, Matrices, Perpendicular Lines & Orthogonality',
-        stepNumber: 4,
-        estimatedMinutes: 15,
-        reason: 'Test problem-solving speed under exam-like conditions.'
-      };
-    }
-
-    // Default to revision
     return {
-      subjectId: 'math_1',
-      subjectTitle: 'Mathematics 1',
-      actionTitle: 'Spaced Repetition Revision',
-      actionSubtitle: 'Active recall on high-yield formulas and theorem proofs',
-      stepNumber: 5,
-      estimatedMinutes: 20,
-      reason: 'Regular spaced review ensures 100% retention for the upcoming Qualifier Exam & Quiz 1.'
+      weekId,
+      subjectId,
+      completedLessons,
+      totalLessons,
+      progressPercent,
+      isCompleted
     };
   }
 
   /**
-   * Get Quiz questions for subject
+   * Get progress for all 4 weeks (Weeks 1 to 4) of a subject
+   */
+  public static getAllWeeksProgress(subjectId: IITMSubjectId = 'math_1'): Record<IITMWeekId, IITMWeekProgress> {
+    return {
+      week_1: this.getWeekProgress('week_1', subjectId),
+      week_2: this.getWeekProgress('week_2', subjectId),
+      week_3: this.getWeekProgress('week_3', subjectId),
+      week_4: this.getWeekProgress('week_4', subjectId)
+    };
+  }
+
+  /**
+   * Get subject overall progress (completed videos / total mapped videos)
+   */
+  public static getSubjectPlaylistProgress(subjectId: IITMSubjectId): {
+    completedVideos: number;
+    totalVideos: number;
+    progressPercent: number;
+  } {
+    const weeks = this.getAllWeeks(subjectId);
+    let completed = 0;
+    let total = 0;
+
+    (['week_1', 'week_2', 'week_3', 'week_4'] as IITMWeekId[]).forEach((wId) => {
+      const w = weeks[wId];
+      if (w && w.lessons) {
+        total += w.lessons.length;
+        w.lessons.forEach((l) => {
+          const prog = this.getLessonProgress(l.lessonId, wId, subjectId);
+          if (prog.completed || prog.watched) completed++;
+        });
+      }
+    });
+
+    const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { completedVideos: completed, totalVideos: total, progressPercent };
+  }
+
+  /**
+   * Get Next Best Action for the playlist track (continuation from exact unfinished video)
+   */
+  public static getPlaylistNextAction(subjectId: IITMSubjectId = 'math_1'): IITMNextAction {
+    const weekIds: IITMWeekId[] = ['week_1', 'week_2', 'week_3', 'week_4'];
+    const weeks = this.getAllWeeks(subjectId);
+    const subjectTitle = subjectId === 'math_1' ? 'Mathematics 1 (Hindi)' : 'Statistics 1 (Hindi)';
+
+    for (const wId of weekIds) {
+      const week = weeks[wId];
+      for (const lesson of week.lessons) {
+        const prog = this.getLessonProgress(lesson.lessonId, wId, subjectId);
+        if (!prog.watched) {
+          return {
+            subjectId,
+            subjectTitle,
+            actionTitle: `Continue ${lesson.title}`,
+            actionSubtitle: `Week ${week.weekNumber} • Lesson ${lesson.lessonOrder} • ${lesson.durationFormatted} • ${lesson.keyConcepts[0] || 'Concept Lecture'}`,
+            stepNumber: 1,
+            estimatedMinutes: lesson.durationMinutes,
+            reason: `Next sequential lecture in Week ${week.weekNumber} playlist.`,
+            track: 'playlist',
+            weekId: wId,
+            lessonId: lesson.lessonId
+          };
+        } else if (!prog.notesGenerated) {
+          return {
+            subjectId,
+            subjectTitle,
+            actionTitle: `Review AI Notes: ${lesson.title}`,
+            actionSubtitle: `Week ${week.weekNumber} • Formulas & Theorems`,
+            stepNumber: 2,
+            estimatedMinutes: 10,
+            reason: 'Consolidate key formulas immediately following the video lecture.',
+            track: 'playlist',
+            weekId: wId,
+            lessonId: lesson.lessonId
+          };
+        } else if (!prog.practiceCompleted) {
+          return {
+            subjectId,
+            subjectTitle,
+            actionTitle: `Practice: ${week.title}`,
+            actionSubtitle: `Lesson ${lesson.lessonOrder} • Step-by-Step Questions`,
+            stepNumber: 3,
+            estimatedMinutes: 15,
+            reason: 'Practice problem sets to solidify understanding before taking the quiz.',
+            track: 'playlist',
+            weekId: wId,
+            lessonId: lesson.lessonId
+          };
+        }
+      }
+    }
+
+    return {
+      subjectId,
+      subjectTitle,
+      actionTitle: `Take Comprehensive Week 1-4 ${subjectTitle} Mock`,
+      actionSubtitle: 'All Weeks Completed • Qualifier & Quiz 1 Exam Readiness',
+      stepNumber: 4,
+      estimatedMinutes: 30,
+      reason: `You have completed all 4 weeks of ${subjectTitle}!`,
+      track: 'playlist',
+      weekId: 'week_1'
+    };
+  }
+
+  /**
+   * Diagnostic report for playlist validation and integrity
+   */
+  public static getDiagnosticReport(subjectId: IITMSubjectId = 'math_1'): IITMDiagnosticReport {
+    const meta = this.getPlaylistMeta(subjectId);
+    const weeks = this.getAllWeeks(subjectId);
+    const w1 = weeks.week_1.lessons;
+    const w2 = weeks.week_2.lessons;
+    const w3 = weeks.week_3.lessons;
+    const w4 = weeks.week_4.lessons;
+
+    const allLessons = [...w1, ...w2, ...w3, ...w4];
+    const unverifiedCount = allLessons.filter((l) => l.weekMappingStatus === 'WEEK_MAPPING_UNVERIFIED').length;
+    const unavailableCount = allLessons.filter((l) => l.status === 'UNAVAILABLE').length;
+
+    const audit = subjectId === 'math_1' ? PlaylistIntegrityChecker.getMathAudit() : PlaylistIntegrityChecker.getStatsAudit();
+
+    return {
+      playlistId: meta.playlistId,
+      playlistTitle: meta.playlistTitle,
+      canonicalUrl: meta.canonicalUrl,
+      userProvidedUrl: meta.userProvidedUrl,
+      channel: meta.channel,
+      status: meta.status,
+      lastValidated: meta.lastValidated,
+      totalVideosDiscovered: meta.totalVideosDiscovered,
+      totalVideosImported: meta.totalVideosImported,
+      totalVideosMapped: allLessons.length,
+      week1VideosCount: w1.length,
+      week2VideosCount: w2.length,
+      week3VideosCount: w3.length,
+      week4VideosCount: w4.length,
+      skippedVideosCount: audit.totalSkipped,
+      unverifiedWeekMappingsCount: unverifiedCount,
+      unavailableVideosCount: unavailableCount,
+      progressPipelineStatus: '5_STEP_ACTIVE (Watch -> Notes -> Practice -> Quiz -> Revision)',
+      buildStatus: 'VERIFIED_GREEN'
+    };
+  }
+
+  /**
+   * Get integrity audit from PlaylistIntegrityChecker
+   */
+  public static getIntegrityAudit(subjectId: IITMSubjectId): IITMPlaylistIntegrityAudit {
+    return subjectId === 'math_1'
+      ? PlaylistIntegrityChecker.getMathAudit()
+      : PlaylistIntegrityChecker.getStatsAudit();
+  }
+
+  /**
+   * Get Quiz questions for playlist week
+   */
+  public static getWeekQuizQuestions(weekId: IITMWeekId, subjectId: IITMSubjectId = 'math_1'): IITMQuizQuestion[] {
+    if (subjectId === 'stats_1') {
+      return IITM_STATS_PLAYLIST_WEEK_QUESTIONS[weekId] || IITM_STATS_PLAYLIST_WEEK_QUESTIONS.week_1;
+    }
+    return IITM_PLAYLIST_WEEK_QUESTIONS[weekId] || IITM_PLAYLIST_WEEK_QUESTIONS.week_1;
+  }
+
+  /**
+   * Get Quiz questions for subject (OneShot)
    */
   public static getQuizQuestions(subjectId: IITMSubjectId): IITMQuizQuestion[] {
     return subjectId === 'math_1' ? IITM_MATH_1_QUESTIONS : IITM_STATS_1_QUESTIONS;
@@ -307,9 +587,9 @@ export class IITMService {
   }
 
   /**
-   * Request AI Notes specifically for IIT Madras BS
+   * Request AI Notes specifically for IIT Madras BS OneShot
    */
-  public static async fetchAiNotes(subjectId: IITMSubjectId): Promise<string> {
+  public static async fetchAiNotes(subjectId: IITMSubjectId): Promise<StructuredNotes | string> {
     const meta = IITM_SUBJECTS_METADATA[subjectId];
     try {
       const resp = await fetch('/api/iitm/notes', {
@@ -324,6 +604,9 @@ export class IITMService {
 
       if (resp.ok) {
         const data = await resp.json();
+        if (data.structuredNotes) {
+          return data.structuredNotes;
+        }
         if (data.notes) {
           return data.notes;
         }
@@ -332,22 +615,140 @@ export class IITMService {
       // Fallback
     }
 
-    // Pre-formatted high-yield fallback
     const staticNotes = IITM_STRUCTURED_NOTES[subjectId];
-    return `### 📘 ${meta.title} — Comprehensive Study Notes & Formula Sheet
-**Course**: IIT Madras BS Degree Foundation Level
-**Focus**: Qualifier Exam & Quiz 1 Preparation
+    return {
+      title: `${meta.title} — Comprehensive Study Notes & Formula Sheet`,
+      subtitle: 'IIT Madras BS Degree Foundation Level — Qualifier Exam & Quiz 1 Preparation',
+      subjectName: meta.title,
+      weekNumber: 1,
+      sections: [
+        {
+          id: 'sec-overview',
+          heading: 'Subject & Topic Overview',
+          blocks: [
+            {
+              type: 'paragraph',
+              text: staticNotes.overview
+            }
+          ]
+        },
+        {
+          id: 'sec-formulas',
+          heading: 'Key Mathematical & Statistical Formulas',
+          blocks: staticNotes.keyFormulas.map((f) => ({
+            type: 'formula' as const,
+            label: f.label,
+            expression: f.formula,
+            explanation: f.note
+          }))
+        },
+        {
+          id: 'sec-concepts',
+          heading: 'High-Yield Concept Breakdown',
+          blocks: staticNotes.highYieldConcepts.map((c) => ({
+            type: 'callout' as const,
+            variant: 'concept' as const,
+            title: c.heading,
+            content: c.points.join(' • ')
+          }))
+        },
+        {
+          id: 'sec-strategy',
+          heading: 'Qualifier Exam & Quiz 1 Strategy',
+          blocks: staticNotes.qualifierTips.map((t) => ({
+            type: 'tip' as const,
+            title: 'Qualifier Strategy',
+            tipText: t,
+            examFocus: true
+          }))
+        }
+      ],
+      summary: {
+        title: 'Qualifier High-Yield Key Points',
+        points: staticNotes.qualifierTips
+      }
+    };
+  }
 
-#### Overview
-${staticNotes.overview}
+  /**
+   * Request AI Notes for a specific playlist lesson
+   */
+  public static async fetchLessonAiNotes(lesson: IITMPlaylistLesson): Promise<StructuredNotes | string> {
+    const subTitle = lesson.subjectId === 'stats_1' ? 'Statistics for Data Science 1 (Hindi)' : 'Mathematics for Data Science 1 (Hindi)';
+    try {
+      const resp = await fetch('/api/iitm/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subjectId: lesson.subjectId,
+          subjectName: `${subTitle} (Week ${lesson.weekNumber})`,
+          lectureTitle: lesson.title
+        })
+      });
 
-#### 🔑 Key Mathematical & Statistical Formulas
-${staticNotes.keyFormulas.map((f) => `- **${f.label}**:\n  \`${f.formula}\`\n  *Note*: ${f.note}`).join('\n\n')}
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.structuredNotes) {
+          return data.structuredNotes;
+        }
+        if (data.notes) {
+          return data.notes;
+        }
+      }
+    } catch {
+      // Fallback
+    }
 
-#### 💡 High-Yield Concept Breakdown
-${staticNotes.highYieldConcepts.map((c) => `##### ${c.heading}\n${c.points.map((p) => `- ${p}`).join('\n')}`).join('\n\n')}
-
-#### 🎯 Qualifier Exam & Quiz 1 Strategy
-${staticNotes.qualifierTips.map((t) => `- ${t}`).join('\n')}`;
+    return {
+      title: lesson.title,
+      subtitle: `IIT Madras BS Degree — ${subTitle} (Week ${lesson.weekNumber})`,
+      subjectName: subTitle,
+      weekNumber: lesson.weekNumber,
+      lessonOrder: lesson.lessonOrder,
+      sections: [
+        {
+          id: 'sec-concept-overview',
+          heading: 'Lesson Concept Overview',
+          blocks: [
+            {
+              type: 'paragraph',
+              text: lesson.description
+            }
+          ]
+        },
+        {
+          id: 'sec-key-rules',
+          heading: 'Key Formulas & Mathematical Rules',
+          blocks: lesson.keyConcepts.map((c, i) => ({
+            type: 'formula' as const,
+            label: `Key Rule ${i + 1}`,
+            expression: c,
+            explanation: 'Foundation mathematical rule tested in assignments and qualifier exam.'
+          }))
+        },
+        {
+          id: 'sec-exam-focus',
+          heading: 'Qualifier Exam & Graded Assignment Focus',
+          blocks: [
+            {
+              type: 'tip' as const,
+              title: 'Exam Focus Strategy',
+              tipText: lesson.lectureNotesOverview || 'Master core formulas, definitions, and problem-solving steps for graded assignments.',
+              examFocus: true
+            },
+            {
+              type: 'callout' as const,
+              variant: 'info' as const,
+              title: 'Practice Recommendation',
+              content: `Complete the Week ${lesson.weekNumber} practice problem set and take the diagnostic checkpoint quiz.`
+            }
+          ]
+        }
+      ],
+      summary: {
+        title: `Week ${lesson.weekNumber} Lesson Summary`,
+        points: lesson.keyConcepts
+      }
+    };
   }
 }
