@@ -227,6 +227,130 @@ export function preprocessScientificFormulas(text: string): string {
 }
 
 /**
+ * Normalizes Romanized Hinglish, Marathi, and Exam keywords into flawless phonetics
+ * Prevents Edge Neural, Gemini TTS, and Web Speech API from spelling out letters
+ * (e.g. "isse" -> "is-say" instead of "i s s e", "NEET" -> "Neat" instead of "n e e t",
+ * and conversational "beta" -> "bayta" instead of "bita").
+ */
+export function normalizePhoneticsForSpeech(text: string): string {
+  if (!text) return '';
+  let out = text;
+
+  // 1. Protect Scientific uses of "beta" (Greek letters, physics/chemistry/biology terms)
+  out = out.replace(/\b(alpha\s*[,&]?\s*)beta\b/gi, '$1___BETA_SCI___');
+  out = out.replace(
+    /\bbeta\s*-\s*(decay|particle|particles|ray|rays|radiation|pleated|blocker|blockers|cell|cells|sheet|sheets|minus|plus|hydroxy|lactam|oxidation|globulin)\b/gi,
+    '___BETA_SCI___-$1'
+  );
+  out = out.replace(
+    /\bbeta\s+(decay|particle|particles|ray|rays|radiation|pleated|blocker|blockers|cell|cells|sheet|sheets|minus|plus|hydroxy|lactam|oxidation|globulin)\b/gi,
+    '___BETA_SCI___ $1'
+  );
+
+  // 2. Conversational Teacher "beta" -> "bayta" (prevents "bita" / "beeta" English pronunciation)
+  out = out
+    .replace(/\bbeta\s*ji\b|\bbetaji\b/gi, 'bayta ji')
+    .replace(/\bbeta\b/gi, 'bayta')
+    .replace(/\bBeta\b/g, 'Bayta');
+
+  // Restore scientific beta
+  out = out.replace(/___BETA_SCI___/g, 'beta');
+
+  // 3. Exam & Acronyms (prevents NEET from being spelled out "n e e t", AIIMS as "a i i m s")
+  out = out
+    .replace(/\bNEET\b|\bNeet\b|\bneet\b/g, 'Neat')
+    .replace(/\bAIIMS\b|\bAiims\b|\baiims\b/g, 'Aims')
+    .replace(/\bNCERT\b|\bNcert\b/gi, 'N C E R T')
+    .replace(/\bNTA\b|\bNta\b/gi, 'N T A')
+    .replace(/\bCBSE\b|\bCbse\b/gi, 'C B S E')
+    .replace(/\bPYQs\b|\bPyqs\b|\bpyqs\b/g, 'P Y Qs')
+    .replace(/\bPYQ\b|\bPyq\b|\bpyq\b/g, 'P Y Q')
+    .replace(/\bMCQs\b|\bMcqs\b|\bmcqs\b/g, 'M C Qs')
+    .replace(/\bMCQ\b|\bMcq\b|\bmcq\b/g, 'M C Q')
+    .replace(/\bDPP\b|\bDPPs\b/gi, 'Daily Practice Problem')
+    .replace(/\bOMR\b/gi, 'O M R');
+
+  // 4. Hinglish Demonstratives, Pronouns & Connectors (prevents "isse" spelled "i s s e")
+  out = out
+    .replace(/\bisse\b/gi, 'is-say')
+    .replace(/\busse\b/gi, 'us-say')
+    .replace(/\bjisse\b/gi, 'jis-say')
+    .replace(/\bkisse\b/gi, 'kis-say')
+    .replace(/\bisko\b/gi, 'is-ko')
+    .replace(/\busko\b/gi, 'us-ko')
+    .replace(/\bjisko\b/gi, 'jis-ko')
+    .replace(/\bkisko\b/gi, 'kis-ko')
+    .replace(/\binhe\b/gi, 'in-hay')
+    .replace(/\bunhe\b/gi, 'un-hay')
+    .replace(/\bjinke\b/gi, 'jin-kay')
+    .replace(/\bunke\b/gi, 'un-kay')
+    .replace(/\binke\b/gi, 'in-kay')
+    .replace(/\binka\b/gi, 'in-kaa')
+    .replace(/\bunka\b/gi, 'un-kaa')
+    .replace(/\bjinka\b/gi, 'jin-kaa')
+    .replace(/\binse\b/gi, 'in-say')
+    .replace(/\bunse\b/gi, 'un-say')
+    .replace(/\bjinse\b/gi, 'jin-say')
+    .replace(/\bisme\b/gi, 'is-mein')
+    .replace(/\busme\b/gi, 'us-mein')
+    .replace(/\bjisme\b/gi, 'jis-mein')
+    .replace(/\bispe\b/gi, 'is-pay')
+    .replace(/\buspe\b/gi, 'us-pay');
+
+  // 5. Conversational Hinglish Words (phonetic smoothing & warmth)
+  out = out
+    .replace(/\baise\b/gi, 'ay-say')
+    .replace(/\bkaise\b/gi, 'kai-say')
+    .replace(/\bjaise\b/gi, 'jai-say')
+    .replace(/\bwaise\b|\bwese\b/gi, 'vai-say')
+    .replace(/\bchahiye\b/gi, 'chaahiyay')
+    .replace(/\baayega\b|\bayega\b/gi, 'aa-yega')
+    .replace(/\bjayega\b/gi, 'jaa-yega')
+    .replace(/\bkarein\b|\bkaren\b/gi, 'ka-rein')
+    .replace(/\bkarega\b/gi, 'ka-rayga')
+    .replace(/\bhonge\b/gi, 'hon-gay')
+    .replace(/\bpehle\b/gi, 'peh-lay')
+    .replace(/\brahega\b/gi, 'ra-hayga')
+    .replace(/\brahenge\b/gi, 'ra-hen-gay')
+    .replace(/\bdekhoge\b/gi, 'day-kho-gay')
+    .replace(/\bsamjhenge\b/gi, 'sam-jhen-gay')
+    .replace(/\bsamjhein\b/gi, 'sam-jhein')
+    .replace(/\bsamjho\b/gi, 'sam-jho')
+    .replace(/\bsamajh\b/gi, 'sa-majh')
+    .replace(/\bsamajhta\b/gi, 'sa-majh-ta')
+    .replace(/\bsamajhti\b/gi, 'sa-majh-ti')
+    .replace(/\bpadhai\b/gi, 'padh-aai')
+    .replace(/\bsawaal\b|\bsawal\b/gi, 'sa-waal')
+    .replace(/\bjawab\b/gi, 'ja-waab')
+    .replace(/\bzarur\b|\bzaroor\b|\bzaruri\b|\bjarur\b|\bjaruri\b/gi, 'za-roo-ri')
+    .replace(/\bacche\b|\bache\b/gi, 'ach-chay')
+    .replace(/\bachha\b|\bacha\b|\bachhi\b/gi, 'ach-chha')
+    .replace(/\bbohot\b|\bbahut\b/gi, 'ba-hut')
+    .replace(/\bpakka\b/gi, 'pak-ka')
+    .replace(/\bshuru\b/gi, 'shu-roo')
+    .replace(/\bkhatam\b/gi, 'kha-tam')
+    .replace(/\bhamesha\b/gi, 'ha-may-sha')
+    .replace(/\bshabaash\b|\bshabash\b/gi, 'sha-baash')
+    .replace(/\bbhaiya\b/gi, 'bhai-ya')
+    .replace(/\bdidi\b/gi, 'dee-dee');
+
+  // 6. Marathi Academic Phrasing & Pronunciations
+  out = out
+    .replace(/\bmahiti\b/gi, 'maahi-tee')
+    .replace(/\bsope\b/gi, 'so-pay')
+    .replace(/\bkhup\b/gi, 'khoop')
+    .replace(/\bmahatvacha\b|\bmahatvache\b/gi, 'ma-hat-va-che')
+    .replace(/\bkaljipurvak\b|\bkalji-purvak\b/gi, 'kaal-jee-poor-vak')
+    .replace(/\bghabru\b|\bghabroo\b/gi, 'ghab-roo')
+    .replace(/\bvidyarthi\b/gi, 'vid-yaar-thee')
+    .replace(/\bmitrano\b/gi, 'mit-raan-no')
+    .replace(/\bprashna\b/gi, 'prash-na')
+    .replace(/\buttara\b|\buttar\b/gi, 'ut-tar');
+
+  return out;
+}
+
+/**
  * Normalizes common educational abbreviations, Marathi & Hinglish phrases for ultra-clear phonetics
  */
 export function normalizeEducationalPhrasing(text: string): string {
@@ -354,20 +478,23 @@ export function preprocessEducationalText(text: string): string {
   // 7. Normalize Abbreviations & Educational Phrasing
   cleaned = normalizeEducationalPhrasing(cleaned);
 
-  // 8. Remove visual decorative emojis that create TTS glitches
+  // 8. Normalize Phonetics (prevents spelling out "isse" as "i s s e", "NEET" as "n e e t", and conversational "beta" as "bita")
+  cleaned = normalizePhoneticsForSpeech(cleaned);
+
+  // 9. Remove visual decorative emojis that create TTS glitches
   cleaned = cleaned.replace(
     /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F1E0}-\u{1F1FF}]/gu,
     ''
   );
 
-  // 9. Convert bullet lists and numbered lists into smooth sequential sentences with commas
+  // 10. Convert bullet lists and numbered lists into smooth sequential sentences with commas
   cleaned = cleaned
     .replace(/^[-*•]\s+/gm, 'Point: ')
     .replace(/^(\d+)\.\s+/gm, 'Number $1, ')
     .replace(/([.!?।])\s*/g, '$1 ')
     .replace(/([,;:])\s*/g, '$1 ');
 
-  // 10. Clean duplicate or conflicting punctuation
+  // 11. Clean duplicate or conflicting punctuation
   cleaned = cleaned
     .replace(/,\s*,+/g, ', ')
     .replace(/([.!?।])\s*[,;]+/g, '$1 ')

@@ -96,9 +96,11 @@ export const Footer: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[#111827] font-bold">
+          <div className="flex flex-wrap items-center gap-1.5 text-[#111827] font-bold">
+            <span>Founded by <span className="text-[#2563EB]">Shubham Malande</span></span>
+            <span className="text-gray-300">•</span>
             <span>Crafted for NEET 2027 Aspirants</span>
-            <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
+            <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500 inline-block ml-0.5" />
           </div>
         </div>
       </div>

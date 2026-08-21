@@ -41,6 +41,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuthModal }) => 
     {
       q: 'How does the Spaced Revision Queue work?',
       a: 'When you study a topic or solve MCQs, NEETDrop AI schedules active recall reviews based on proven memory retention curves (Day 1, Day 3, Day 7, Day 21) so you never forget weak formulas or NCERT facts.'
+    },
+    {
+      q: 'Who is the founder of NEETDrop AI?',
+      a: 'NEETDrop AI was founded and envisioned by Shubham Malande to empower NEET 2027 droppers with a distraction-free, intelligent AI study engine, NCERT line-by-line mastery, and 24/7 personalized mentoring.'
     }
   ];
 
