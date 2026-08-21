@@ -10,7 +10,11 @@ import {
   getFallbackModel,
   generateContentWithRetry,
   generateStreamWithRetry,
-  generateGeminiTTS
+  generateMsEdgeTTS,
+  generateGeminiTTS,
+  generateNeuralFallbackTTS,
+  isModelInCooldown,
+  markModelCooldown
 } from "./server/geminiClient";
 import {
   fetchTelegramViaBotApi,
@@ -194,7 +198,10 @@ async function startServer() {
     next();
   });
 
-  // Server-side High-Definition Gemini TTS Endpoint
+  // Server-side High-Definition Speech Cache
+  const ttsServerCache = new Map<string, { audioBase64: string; mimeType: string; voiceUsed: string; modelUsed: string }>();
+
+  // Server-side High-Definition Human-Grade TTS Endpoint (Multi-Tier Zero Error)
   app.post("/api/ai/tts", async (req, res) => {
     const { text, persona, voiceName } = req.body;
 
@@ -202,51 +209,104 @@ async function startServer() {
       return res.status(400).json({ success: false, error: "Text is required for TTS generation." });
     }
 
-    if (!getApiKey()) {
-      return res.status(503).json({
-        success: false,
-        fallback: true,
-        error: "Gemini API key is not configured. Fallback to client speech synthesis."
-      });
-    }
+    const cleanChunk = text.slice(0, 1500).trim();
+    const cacheKey = `${persona || "matureMentor"}_${voiceName || "default"}_${cleanChunk}`;
 
-    try {
-      // Limit chunk length to prevent exceeding token limits
-      const cleanChunk = text.slice(0, 1500).trim();
-      const ttsResult = await generateGeminiTTS(cleanChunk, persona || "brother", voiceName);
-
+    // 1. Instant Cache Return
+    if (ttsServerCache.has(cacheKey)) {
+      const cached = ttsServerCache.get(cacheKey)!;
       return res.json({
         success: true,
-        audioBase64: ttsResult.audioBase64,
-        mimeType: ttsResult.mimeType,
-        voiceUsed: ttsResult.voiceUsed,
-        modelUsed: ttsResult.modelUsed
-      });
-    } catch (err: any) {
-      const errMsg = err?.message || String(err);
-      const isQuotaExceeded =
-        errMsg.includes("429") ||
-        errMsg.includes("RESOURCE_EXHAUSTED") ||
-        errMsg.includes("Quota exceeded") ||
-        errMsg.includes("rate-limit");
-
-      if (isQuotaExceeded) {
-        console.warn("[Gemini TTS] Free tier quota reached for TTS. Seamlessly delegating to client-side voice synthesizer.");
-        return res.status(200).json({
-          success: false,
-          fallback: true,
-          quotaExceeded: true,
-          error: "TTS quota reached. Falling back to high-clarity local speech synthesis."
-        });
-      }
-
-      logAiError("Gemini TTS Error", err);
-      return res.status(200).json({
-        success: false,
-        fallback: true,
-        error: errMsg || "Failed to generate Gemini TTS audio. Falling back to local synthesizer."
+        cached: true,
+        ...cached
       });
     }
+
+    // 2. Premier Tier: Microsoft Azure Edge Neural Indian Human Voices (Prabhat / Madhur / Manohar)
+    // Produces 100% natural, human-grade Indian male educator speech with genuine Indian pronunciation
+    try {
+      const edgeResult = await generateMsEdgeTTS(cleanChunk, persona || "matureMentor", voiceName);
+      if (edgeResult && edgeResult.audioBase64) {
+        if (ttsServerCache.size > 200) {
+          const firstKey = ttsServerCache.keys().next().value;
+          if (firstKey) ttsServerCache.delete(firstKey);
+        }
+        ttsServerCache.set(cacheKey, edgeResult);
+
+        return res.json({
+          success: true,
+          audioBase64: edgeResult.audioBase64,
+          mimeType: edgeResult.mimeType,
+          voiceUsed: edgeResult.voiceUsed,
+          modelUsed: edgeResult.modelUsed
+        });
+      }
+    } catch (edgeErr: any) {
+      console.warn("[TTS Service] Edge Neural voice attempt note:", edgeErr?.message || "Falling back to Gemini Studio");
+    }
+
+    // 3. Secondary Tier: Gemini 3.1 Flash Studio Voice
+    if (getApiKey() && !isModelInCooldown("gemini-3.1-flash-tts-preview")) {
+      try {
+        const ttsResult = await generateGeminiTTS(cleanChunk, persona || "matureMentor", voiceName);
+        if (ttsResult && ttsResult.audioBase64) {
+          if (ttsServerCache.size > 200) {
+            const firstKey = ttsServerCache.keys().next().value;
+            if (firstKey) ttsServerCache.delete(firstKey);
+          }
+          ttsServerCache.set(cacheKey, ttsResult);
+
+          return res.json({
+            success: true,
+            audioBase64: ttsResult.audioBase64,
+            mimeType: ttsResult.mimeType,
+            voiceUsed: ttsResult.voiceUsed,
+            modelUsed: ttsResult.modelUsed
+          });
+        }
+      } catch (err: any) {
+        const isQuota =
+          err?.isQuota ||
+          err?.status === 429 ||
+          (err?.message && err.message.toLowerCase().includes("quota")) ||
+          (err?.message && err.message.toLowerCase().includes("resource_exhausted"));
+
+        if (isQuota) {
+          markModelCooldown("gemini-3.1-flash-tts-preview", 10 * 60 * 1000);
+          console.warn("[TTS Service] Gemini TTS quota reached. Seamlessly routing to Neural HD Stream.");
+        } else {
+          console.warn("[TTS Service] Gemini Studio TTS unavailable; routing to Neural HD Stream:", err?.message || "Temporarily unavailable");
+        }
+      }
+    }
+
+    // 4. Resilient Tertiary Tier: Neural Human Speech Stream (Marathi, Hindi & Indian English)
+    try {
+      const neuralResult = await generateNeuralFallbackTTS(cleanChunk, persona);
+      if (neuralResult && neuralResult.audioBase64) {
+        if (ttsServerCache.size > 200) {
+          const firstKey = ttsServerCache.keys().next().value;
+          if (firstKey) ttsServerCache.delete(firstKey);
+        }
+        ttsServerCache.set(cacheKey, neuralResult);
+
+        return res.json({
+          success: true,
+          audioBase64: neuralResult.audioBase64,
+          mimeType: neuralResult.mimeType,
+          voiceUsed: neuralResult.voiceUsed,
+          modelUsed: neuralResult.modelUsed
+        });
+      }
+    } catch (fallbackErr: any) {
+      console.warn("[TTS Service] Neural Stream note:", fallbackErr?.message || "Unavailable");
+    }
+
+    return res.status(200).json({
+      success: false,
+      fallback: true,
+      error: "TTS stream falling back to device natural speech synthesizer."
+    });
   });
 
   // Server-side PDF Proxy Endpoint (bypasses CORS & TLS/HTTP2 issues on NCERT website)

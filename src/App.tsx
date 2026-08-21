@@ -35,6 +35,7 @@ import { SearchModal } from './components/SearchModal';
 import { AuthModal } from './components/AuthModal';
 import { Footer } from './components/Footer';
 import { FloatingAIMentor } from './components/FloatingAIMentor';
+import { FloatingVoiceBar } from './components/FloatingVoiceBar';
 import {
   Home,
   BookOpen,
@@ -403,6 +404,9 @@ const MainAppContent: React.FC = () => {
 
       {/* Floating AI Mentor Button */}
       {!distractionFreeMode && currentView !== 'landing' && <FloatingAIMentor />}
+
+      {/* Global Human AI Voice Dock */}
+      <FloatingVoiceBar />
 
       {/* Footer */}
       {!distractionFreeMode && <Footer />}

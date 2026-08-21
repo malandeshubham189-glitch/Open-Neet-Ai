@@ -1,15 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Lightbulb, Zap, Target, AlertTriangle, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
-import { EducationalDiagram } from './EducationalDiagram';
-import { parseEducationalMessage } from '../utils/diagramParser';
+import { Lightbulb, Zap, Target, AlertTriangle, BookOpen, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { indianTTS } from '../utils/indianVoiceTTS';
+import { ttsService } from '../services/TTSService';
 
 interface TeacherFormattedMessageProps {
   content: string;
+  idPrefix?: string;
 }
 
-export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = ({ content }) => {
+export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = ({
+  content,
+  idPrefix = 'tfm'
+}) => {
+  const [speakingCardId, setSpeakingCardId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = ttsService.subscribe((state) => {
+      if (state.status === 'stopped' || state.status === 'idle' || state.status === 'error') {
+        setSpeakingCardId(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   if (!content) return null;
+
+  const handleSpeakCard = (cardId: string, textToSpeak: string) => {
+    if (speakingCardId === cardId) {
+      indianTTS.stop();
+      setSpeakingCardId(null);
+      return;
+    }
+
+    setSpeakingCardId(cardId);
+    indianTTS.speakText(
+      cardId,
+      textToSpeak,
+      'matureMentor',
+      () => setSpeakingCardId(cardId),
+      () => setSpeakingCardId(null),
+      () => setSpeakingCardId(null)
+    );
+  };
 
   // Split content into blocks based on double line breaks or card markers
   const blocks = content.split(/\n\s*\n/);
@@ -20,6 +53,8 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
       {blocks.map((block, idx) => {
         const trimmed = block.trim();
         if (!trimmed) return null;
+        const blockCardId = `${idPrefix}-card-${idx}`;
+        const isSpeaking = speakingCardId === blockCardId;
 
         // Formula Card
         if (trimmed.includes('💡 **FORMULA CARD:**') || trimmed.startsWith('💡 **FORMULA')) {
@@ -29,9 +64,23 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
               key={idx}
               className="my-3 rounded-2xl border-l-4 border-amber-500 bg-amber-50/90 p-4 shadow-xs text-amber-950 dark:bg-amber-950/20 dark:border-amber-400 dark:text-amber-100"
             >
-              <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 text-xs sm:text-sm mb-1.5">
-                <Lightbulb className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>FORMULA CARD</span>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 text-xs sm:text-sm">
+                  <Lightbulb className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span>FORMULA CARD</span>
+                </div>
+                <button
+                  onClick={() => handleSpeakCard(blockCardId, `Formula Note: ${body || trimmed}`)}
+                  className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-all ${
+                    isSpeaking
+                      ? 'bg-amber-600 text-white border-amber-700 animate-pulse'
+                      : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                  }`}
+                  title="Listen to this Formula with Mature Mentor Voice"
+                >
+                  {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                  <span>{isSpeaking ? 'Stop' : 'Listen'}</span>
+                </button>
               </div>
               <div className="prose prose-xs max-w-none text-amber-900 dark:text-amber-100 font-medium leading-relaxed">
                 <ReactMarkdown>{body || trimmed}</ReactMarkdown>
@@ -48,9 +97,23 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
               key={idx}
               className="my-3 rounded-2xl border-l-4 border-emerald-500 bg-emerald-50/90 p-4 shadow-xs text-emerald-950 dark:bg-emerald-950/20 dark:border-emerald-400 dark:text-emerald-100"
             >
-              <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm mb-1.5">
-                <Zap className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>SHORTCUT CARD</span>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm">
+                  <Zap className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span>SHORTCUT CARD</span>
+                </div>
+                <button
+                  onClick={() => handleSpeakCard(blockCardId, `Shortcut Trick: ${body || trimmed}`)}
+                  className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-all ${
+                    isSpeaking
+                      ? 'bg-emerald-600 text-white border-emerald-700 animate-pulse'
+                      : 'bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200'
+                  }`}
+                  title="Listen to this Shortcut Trick with Mature Mentor Voice"
+                >
+                  {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                  <span>{isSpeaking ? 'Stop' : 'Listen'}</span>
+                </button>
               </div>
               <div className="prose prose-xs max-w-none text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed">
                 <ReactMarkdown>{body || trimmed}</ReactMarkdown>
@@ -67,9 +130,23 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
               key={idx}
               className="my-3 rounded-2xl border-l-4 border-purple-500 bg-purple-50/90 p-4 shadow-xs text-purple-950 dark:bg-purple-950/20 dark:border-purple-400 dark:text-purple-100"
             >
-              <div className="flex items-center gap-2 font-bold text-purple-800 dark:text-purple-300 text-xs sm:text-sm mb-1.5">
-                <Target className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-                <span>PYQ TRICK</span>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2 font-bold text-purple-800 dark:text-purple-300 text-xs sm:text-sm">
+                  <Target className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                  <span>PYQ TRICK</span>
+                </div>
+                <button
+                  onClick={() => handleSpeakCard(blockCardId, `Previous Year Question Trick: ${body || trimmed}`)}
+                  className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-all ${
+                    isSpeaking
+                      ? 'bg-purple-600 text-white border-purple-700 animate-pulse'
+                      : 'bg-purple-100 text-purple-900 border-purple-300 hover:bg-purple-200'
+                  }`}
+                  title="Listen to this PYQ Trick with Mature Mentor Voice"
+                >
+                  {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                  <span>{isSpeaking ? 'Stop' : 'Listen'}</span>
+                </button>
               </div>
               <div className="prose prose-xs max-w-none text-purple-900 dark:text-purple-100 font-medium leading-relaxed">
                 <ReactMarkdown>{body || trimmed}</ReactMarkdown>
@@ -86,9 +163,23 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
               key={idx}
               className="my-3 rounded-2xl border-l-4 border-rose-500 bg-rose-50/90 p-4 shadow-xs text-rose-950 dark:bg-rose-950/20 dark:border-rose-400 dark:text-rose-100"
             >
-              <div className="flex items-center gap-2 font-bold text-rose-800 dark:text-rose-300 text-xs sm:text-sm mb-1.5">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                <span>COMMON MISTAKE ALERT</span>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2 font-bold text-rose-800 dark:text-rose-300 text-xs sm:text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <span>COMMON MISTAKE ALERT</span>
+                </div>
+                <button
+                  onClick={() => handleSpeakCard(blockCardId, `Warning, common mistake alert: ${body || trimmed}`)}
+                  className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-all ${
+                    isSpeaking
+                      ? 'bg-rose-600 text-white border-rose-700 animate-pulse'
+                      : 'bg-rose-100 text-rose-900 border-rose-300 hover:bg-rose-200'
+                  }`}
+                  title="Listen to this Mistake Warning with Mature Mentor Voice"
+                >
+                  {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                  <span>{isSpeaking ? 'Stop' : 'Listen'}</span>
+                </button>
               </div>
               <div className="prose prose-xs max-w-none text-rose-900 dark:text-rose-100 font-medium leading-relaxed">
                 <ReactMarkdown>{body || trimmed}</ReactMarkdown>
@@ -139,4 +230,3 @@ export const TeacherFormattedMessage: React.FC<TeacherFormattedMessageProps> = (
     </div>
   );
 };
-

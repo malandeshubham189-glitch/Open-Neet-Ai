@@ -1,3 +1,4 @@
+import { DEFAULT_MENTOR_VOICE, VOICE_PROFILES } from '../config/voiceConfig';
 import { ttsService } from '../services/TTSService';
 
 export interface IndianVoiceConfig {
@@ -22,7 +23,7 @@ export class IndianTTSController {
   public async speakText(
     msgId: string,
     rawText: string,
-    personaKey: 'brother' | 'sister' | 'teacher' | 'mentor' = 'brother',
+    personaKey: string = DEFAULT_MENTOR_VOICE.id,
     onStart?: () => void,
     onEnd?: () => void,
     onError?: (err: any) => void
@@ -41,13 +42,8 @@ export class IndianTTSController {
     if (onStart) onStart();
 
     // Map persona to appropriate pitch & speech rate (Mature, calm & authoritative)
-    const pitchMap: Record<string, number> = {
-      sister: 1.05,
-      brother: 0.94,
-      teacher: 0.94,
-      mentor: 0.94
-    };
-    const personaPitch = pitchMap[personaKey] || 0.94;
+    const profile = VOICE_PROFILES[personaKey] || DEFAULT_MENTOR_VOICE;
+    const personaPitch = profile.pitch;
 
     let hasStarted = false;
 
@@ -78,7 +74,7 @@ export class IndianTTSController {
       }
     });
 
-    ttsService.play(rawText, 0, personaKey, personaPitch);
+    ttsService.play(rawText, 0, profile.id, personaPitch);
   }
 
   public stop() {
@@ -101,4 +97,3 @@ export class IndianTTSController {
 }
 
 export const indianTTS = IndianTTSController.getInstance();
-
